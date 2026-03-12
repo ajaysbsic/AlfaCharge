@@ -32,7 +32,7 @@ public sealed class LocationService
     /// </summary>
     public async Task<ApiResult<List<LocationViewModel>>> GetAllLocationsAsync(CancellationToken ct = default)
     {
-        return await _apiClient.GetAsync<List<LocationViewModel>>("/api/location/Locations", ct);
+        return await _apiClient.GetAsync<List<LocationViewModel>>("/api/location/all", ct);
     }
 
     /// <summary>

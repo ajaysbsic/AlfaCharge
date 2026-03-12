@@ -66,8 +66,8 @@
             <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip>
         </MudTd>
         <MudTd DataLabel="Expiry Date">@(context.ExpiryDate?.ToString("d") ?? "No expiry")</MudTd>
-        <MudTd DataLabel="Last Used">@(context.LastUsed?.ToString("g") ?? "Never")</MudTd>
-        <MudTd DataLabel="Last Station">@(context.LastUsedStation ?? "-")</MudTd>
+        <MudTd DataLabel="Last Used">@(context.LastUsedAt?.ToString("g") ?? "Never")</MudTd>
+        <MudTd DataLabel="Last Station">@(context.LastUsedStationId ?? "-")</MudTd>
         <MudTd DataLabel="Actions">
             <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
                            OnClick="@(() => Navigation.NavigateTo($"/rfid/{context.Id}/edit"))" />

@@ -81,7 +81,7 @@ public sealed class UserViewModel
     public string Role { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
     public DateTimeOffset? CreatedAt { get; set; }
-    public DateTimeOffset? LastLogin { get; set; }
+    public DateTimeOffset? LastLoginAt { get; set; }
 }
 
 /// <summary>
@@ -95,8 +95,8 @@ public sealed class RfidCardViewModel
     public string? UserName { get; set; }
     public string Status { get; set; } = "Active";
     public DateTimeOffset? ExpiryDate { get; set; }
-    public DateTimeOffset? LastUsed { get; set; }
-    public string? LastUsedStation { get; set; }
+    public DateTimeOffset? LastUsedAt { get; set; }
+    public string? LastUsedStationId { get; set; }
 }
 
 /// <summary>

@@ -95,7 +95,7 @@ public class MetricsController : ControllerBase
     /// Get top errors statistics.
     /// </summary>
     [HttpGet("errors")]
-    public async Task<ActionResult<List<ErrorStatsDto>>> GetErrorStats(CancellationToken ct)
+    public async Task<ActionResult<ErrorsChartDto>> GetErrorStats(CancellationToken ct)
     {
         try
         {

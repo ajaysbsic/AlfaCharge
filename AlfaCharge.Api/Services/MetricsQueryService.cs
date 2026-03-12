@@ -54,80 +54,55 @@ public sealed class MetricsQueryService : IMetricsQueryService
 
     public async Task<SessionsChartDto> GetSessionsChartAsync(CancellationToken ct)
     {
-        var now = DateTimeOffset.UtcNow;
-        var last24Hours = now.AddHours(-24);
-        var last7Days = now.AddDays(-7);
+        var last24Hours = DateTimeOffset.UtcNow.AddHours(-24);
 
-        var hourlyData = await _db.ChargingTransactions
+        var hourlyRows = await _db.ChargingTransactions
             .Where(t => t.StartedAt >= last24Hours)
             .GroupBy(t => t.StartedAt.Hour)
-            .Select(g => new ChartDataPointDto
+            .Select(g => new
             {
-                Label = g.Key.ToString("00") + ":00",
-                Value = g.Count()
+                Hour = g.Key,
+                Count = g.Count()
             })
-            .OrderBy(d => d.Label)
+            .OrderBy(x => x.Hour)
             .ToListAsync(ct);
 
-        var dailyData = await _db.ChargingTransactions
-            .Where(t => t.StartedAt >= last7Days)
-            .GroupBy(t => t.StartedAt.Date)
-            .Select(g => new ChartDataPointDto
+        var data = hourlyRows
+            .Select(x => new ChartDataPointDto
             {
-                Label = g.Key.ToString("MMM dd"),
-                Value = g.Count(),
-                Timestamp = g.Key
+                Label = $"{x.Hour:00}:00",
+                Value = x.Count
             })
-            .OrderBy(d => d.Timestamp)
-            .ToListAsync(ct);
+            .ToList();
 
-        return new SessionsChartDto
-        {
-            HourlyData = hourlyData,
-            DailyData = dailyData
-        };
+        return new SessionsChartDto { Data = data };
     }
 
     public async Task<EnergyChartDto> GetEnergyChartAsync(CancellationToken ct)
     {
-        var now = DateTimeOffset.UtcNow;
-        var last7Days = now.AddDays(-7);
-        var last4Weeks = now.AddDays(-28);
+        var last7Days = DateTimeOffset.UtcNow.AddDays(-7);
 
-        var dailyData = await _db.ChargingTransactions
+        var dailyRows = await _db.ChargingTransactions
             .Where(t => t.StartedAt >= last7Days && t.KWh.HasValue)
             .GroupBy(t => t.StartedAt.Date)
-            .Select(g => new ChartDataPointDto
+            .Select(g => new
             {
-                Label = g.Key.ToString("MMM dd"),
-                Value = g.Sum(t => t.KWh ?? 0),
-                Timestamp = g.Key
-            })
-            .OrderBy(d => d.Timestamp)
-            .ToListAsync(ct);
-
-        var weeklyTransactions = await _db.ChargingTransactions
-            .Where(t => t.StartedAt >= last4Weeks && t.KWh.HasValue)
-            .ToListAsync(ct);
-
-        var weeklyData = weeklyTransactions
-            .GroupBy(t => System.Globalization.CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(
-                t.StartedAt.DateTime,
-                System.Globalization.CalendarWeekRule.FirstDay,
-                DayOfWeek.Monday))
-            .Select(g => new ChartDataPointDto
-            {
-                Label = $"Week {g.Key}",
+                Day = g.Key,
                 Value = g.Sum(t => t.KWh ?? 0)
             })
-            .OrderBy(d => d.Label)
+            .OrderBy(x => x.Day)
+            .ToListAsync(ct);
+
+        var data = dailyRows
+            .Select(x => new ChartDataPointDto
+            {
+                Label = x.Day.ToString("MMM dd"),
+                Value = x.Value,
+                Timestamp = x.Day
+            })
             .ToList();
 
-        return new EnergyChartDto
-        {
-            DailyData = dailyData,
-            WeeklyData = weeklyData
-        };
+        return new EnergyChartDto { Data = data };
     }
 
     public async Task<OcppTrafficChartDto> GetOcppTrafficChartAsync(CancellationToken ct)
@@ -172,20 +147,22 @@ public sealed class MetricsQueryService : IMetricsQueryService
         };
     }
 
-    public async Task<List<ErrorStatsDto>> GetErrorStatsAsync(CancellationToken ct)
+    public async Task<ErrorsChartDto> GetErrorStatsAsync(CancellationToken ct)
     {
         var last7Days = DateTimeOffset.UtcNow.AddDays(-7);
 
-        return await _db.Connector
+        var data = await _db.Connector
             .Where(c => c.ErrorCode != null && c.LastStatusTimestamp >= last7Days)
             .GroupBy(c => c.ErrorCode)
-            .Select(g => new ErrorStatsDto
+            .Select(g => new ChartDataPointDto
             {
-                ErrorCode = g.Key ?? "Unknown",
-                Count = g.Count()
+                Label = g.Key ?? "Unknown",
+                Value = g.Count()
             })
-            .OrderByDescending(e => e.Count)
+            .OrderByDescending(d => d.Value)
             .Take(10)
             .ToListAsync(ct);
+
+        return new ErrorsChartDto { Data = data };
     }
 }

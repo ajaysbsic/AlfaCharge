@@ -23,21 +23,19 @@ public sealed class ChartDataPointDto
 }
 
 /// <summary>
-/// Sessions chart data DTO.
+/// Sessions chart data DTO (last 24 hours, hourly).
 /// </summary>
 public sealed class SessionsChartDto
 {
-    public List<ChartDataPointDto> HourlyData { get; set; } = [];
-    public List<ChartDataPointDto> DailyData { get; set; } = [];
+    public List<ChartDataPointDto> Data { get; set; } = [];
 }
 
 /// <summary>
-/// Energy chart data DTO.
+/// Energy chart data DTO (last 7 days, daily).
 /// </summary>
 public sealed class EnergyChartDto
 {
-    public List<ChartDataPointDto> DailyData { get; set; } = [];
-    public List<ChartDataPointDto> WeeklyData { get; set; } = [];
+    public List<ChartDataPointDto> Data { get; set; } = [];
 }
 
 /// <summary>
@@ -50,7 +48,15 @@ public sealed class OcppTrafficChartDto
 }
 
 /// <summary>
-/// Error statistics DTO.
+/// Error statistics chart DTO.
+/// </summary>
+public sealed class ErrorsChartDto
+{
+    public List<ChartDataPointDto> Data { get; set; } = [];
+}
+
+/// <summary>
+/// Error statistics DTO (legacy, for internal use).
 /// </summary>
 public sealed class ErrorStatsDto
 {

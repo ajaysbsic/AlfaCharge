@@ -8,5 +8,5 @@ public interface IMetricsQueryService
     Task<SessionsChartDto> GetSessionsChartAsync(CancellationToken ct);
     Task<EnergyChartDto> GetEnergyChartAsync(CancellationToken ct);
     Task<OcppTrafficChartDto> GetOcppTrafficChartAsync(CancellationToken ct);
-    Task<List<ErrorStatsDto>> GetErrorStatsAsync(CancellationToken ct);
+    Task<ErrorsChartDto> GetErrorStatsAsync(CancellationToken ct);
 }
