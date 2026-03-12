@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="AlfaGrid.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
+</Solution>

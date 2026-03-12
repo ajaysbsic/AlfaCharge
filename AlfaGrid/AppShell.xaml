@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="AlfaGrid.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:AlfaGrid.Source.View"
+    xmlns:conv="clr-namespace:AlfaGrid.Source.Converters"
+    Shell.TabBarIsVisible="False"
+    Shell.NavBarIsVisible="False"
+    Shell.FlyoutBehavior="Flyout"
+    Shell.FlyoutBackgroundColor="#FFFFFF"
+    Shell.FlyoutWidth="300">
+
+    <Shell.Resources>
+        <conv:TranslateExtension x:Key="T" />
+    </Shell.Resources>
+
+    <ShellContent FlyoutItemIsVisible="False" Shell.FlyoutBehavior="Disabled"
+        ContentTemplate="{DataTemplate local:LoadingPage}" Route="LoadingPage" />
+
+    <ShellContent
+        FlyoutItemIsVisible="False" Shell.FlyoutBehavior="Disabled"
+        ContentTemplate="{DataTemplate local:LoginPage}"
+        Route="LoginPage" />
+
+    <ShellContent
+        FlyoutItemIsVisible="False" Shell.FlyoutBehavior="Disabled"
+        ContentTemplate="{DataTemplate local:RegisterPage}"
+        Route="RegisterPage" />
+    
+    <FlyoutItem Title="{Binding MenuHome}" Route="home" x:Name="HomeFlyoutItem" FlyoutItemIsVisible="False">
+        <ShellContent Title="{Binding MenuHome}" Route="HomePage" ContentTemplate="{DataTemplate local:HomePage}"/>
+    </FlyoutItem>
+
+    <MenuItem Text="{Binding MenuMyChargingProfile}"
+              IconImageSource="charging_profile_icon.png"
+              Command="{Binding NavigateToMyChargingProfileCommand}"/>
+
+    <MenuItem Text="{Binding MenuReservations}"
+              IconImageSource="reservations_icon.png"
+              Command="{Binding NavigateToReservationsCommand}"/>
+
+    <MenuItem Text="{Binding MenuSettings}"
+              IconImageSource="settings_icon.png"
+              Command="{Binding NavigateToSettingsCommand}"/>
+
+    <Shell.FlyoutHeader>
+        <Grid BackgroundColor="#FFFFFF" 
+              Padding="{OnPlatform Android='16,24,16,24', iOS='16,44,16,24', WinUI='16,24,16,24'}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            
+            <Border WidthRequest="64" 
+                    HeightRequest="64" 
+                    BackgroundColor="#F0F4FA" 
+                    Padding="0">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="32"/>
+                </Border.StrokeShape>
+                <Image Source="ic_user.png" 
+                       Aspect="AspectFit" 
+                       Margin="12"/>
+            </Border>
+            
+            <VerticalStackLayout Grid.Column="1" 
+                               Spacing="4" 
+                               Padding="16,0,0,0"
+                               VerticalOptions="Center">
+                <Label Text="Ajay Singh" 
+                       FontAttributes="Bold" 
+                       FontSize="18" 
+                       TextColor="#0066FF"/>
+                <Label Text="Test User" 
+                       FontSize="13" 
+                       TextColor="#6D7A8A"/>
+            </VerticalStackLayout>
+            
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding NavigateToProfileCommand}"/>
+            </Grid.GestureRecognizers>
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <Shell.FlyoutFooter>
+        <VerticalStackLayout Spacing="12" Padding="16,8,16,16">
+            <Border BackgroundColor="#F79A1B"
+                    StrokeThickness="0"
+                    HeightRequest="50"
+                    Padding="16,12">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="25"/>
+                </Border.StrokeShape>
+                <Grid ColumnDefinitions="Auto,*">
+                    <Image Grid.Column="0"
+                           Source="logout_icon.png"
+                           HeightRequest="20"
+                           WidthRequest="20"
+                           VerticalOptions="Center"
+                           Margin="0,0,8,0"/>
+                    <Label Grid.Column="1"
+                           Text="{Binding SettingsLogout}"
+                           TextColor="White"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           VerticalOptions="Center"/>
+                </Grid>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding LogoutCommand}"/>
+                </Border.GestureRecognizers>
+            </Border>
+
+            <VerticalStackLayout Spacing="2">
+                <Label Text="Version: 9.0.0"
+                       FontSize="11"
+                       TextColor="#999999"/>
+                <Label Text="Build Id: BP3A.251005.004.B1"
+                       FontSize="11"
+                       TextColor="#999999"/>
+                <Label Text="Build Number: 19"
+                       FontSize="11"
+                       TextColor="#999999"/>
+            </VerticalStackLayout>
+            
+        </VerticalStackLayout>
+    </Shell.FlyoutFooter>
+
+    <Shell.MenuItemTemplate>
+        <DataTemplate>
+            <Grid Padding="16,12" ColumnDefinitions="Auto,*" ColumnSpacing="16">
+                <Image Grid.Column="0"
+                       Source="{Binding Icon}"
+                       HeightRequest="24"
+                       WidthRequest="24"
+                       VerticalOptions="Center"/>
+                <Label Grid.Column="1"
+                       Text="{Binding Text}"
+                       FontSize="16"
+                       TextColor="#333333"
+                       VerticalOptions="Center"/>
+            </Grid>
+        </DataTemplate>
+    </Shell.MenuItemTemplate>
+
+</Shell>

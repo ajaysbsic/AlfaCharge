@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AlfaGrid.Source.View.FilterPage"
+             xmlns:viewModel="clr-namespace:AlfaGrid.Source.ViewModel"
+             xmlns:controls="clr-namespace:AlfaGrid.Source.Controls"
+             xmlns:local="clr-namespace:AlfaGrid.Source.Converters"
+             x:DataType="viewModel:FilterPageViewModel"
+             Title="{local:Translate Filter_Title}"
+             Shell.NavBarIsVisible="True"
+             BackgroundColor="White">
+
+    <Grid RowDefinitions="*,Auto">
+        
+        <!-- Filter Content -->
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="20" Spacing="24">
+                
+                <!-- Sorting Section -->
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{local:Translate Filter_Sorting}"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#0E2A47"/>
+                    
+                    <!-- Time & Rating Tabs -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Border Grid.Column="0"
+                                BackgroundColor="{Binding IsSortByTime, Converter={StaticResource BoolToColorConverter}}"
+                                StrokeThickness="0"
+                                Padding="16,12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Label Text="{local:Translate Filter_Time}"
+                                   TextColor="White"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"/>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectSortByTimeCommand}"/>
+                            </Border.GestureRecognizers>
+                        </Border>
+
+                        <Border Grid.Column="1"
+                                BackgroundColor="{Binding IsSortByRating, Converter={StaticResource BoolToColorConverter}}"
+                                StrokeThickness="0"
+                                Padding="16,12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Label Text="{local:Translate Filter_Rating}"
+                                   TextColor="White"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"/>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectSortByRatingCommand}"/>
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </Grid>
+                </VerticalStackLayout>
+
+                <!-- Rating Section -->
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{local:Translate Filter_Rating}"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#0E2A47"/>
+                    
+                    <!-- All Ratings & Only Above Tabs -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <Border Grid.Column="0"
+                                BackgroundColor="{Binding IsAllRatings, Converter={StaticResource BoolToColorConverter}}"
+                                StrokeThickness="0"
+                                Padding="16,12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Label Text="{local:Translate Filter_AllRatings}"
+                                   TextColor="White"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"/>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectAllRatingsCommand}"/>
+                            </Border.GestureRecognizers>
+                        </Border>
+
+                        <Border Grid.Column="1"
+                                BackgroundColor="{Binding IsOnlyAbove, Converter={StaticResource BoolToColorConverter}}"
+                                StrokeThickness="0"
+                                Padding="16,12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Label Text="{local:Translate Filter_OnlyAbove}"
+                                   TextColor="White"
+                                   FontSize="14"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="Center"/>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectOnlyAboveCommand}"/>
+                            </Border.GestureRecognizers>
+                        </Border>
+                    </Grid>
+
+                    <!-- Rating Selection (Only Above Mode) -->
+                    <Border IsVisible="{Binding IsOnlyAbove}"
+                            BackgroundColor="#F5F7FB"
+                            StrokeThickness="0"
+                            Padding="12">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+                        
+                        <VerticalStackLayout Spacing="12">
+                            <Label Text="{local:Translate Filter_SelectMinRating}"
+                                   FontSize="14"
+                                   TextColor="#666666"/>
+                            
+                            <!-- Rating Stars Selection -->
+                            <HorizontalStackLayout Spacing="8" HorizontalOptions="Center">
+                                <Label Text="★" 
+                                       FontSize="32" 
+                                       TextColor="{Binding MinRating, Converter={StaticResource RatingToColorConverter}, ConverterParameter=1}">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectRatingCommand}" CommandParameter="1"/>
+                                    </Label.GestureRecognizers>
+                                </Label>
+                                <Label Text="★" 
+                                       FontSize="32" 
+                                       TextColor="{Binding MinRating, Converter={StaticResource RatingToColorConverter}, ConverterParameter=2}">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectRatingCommand}" CommandParameter="2"/>
+                                    </Label.GestureRecognizers>
+                                </Label>
+                                <Label Text="★" 
+                                       FontSize="32" 
+                                       TextColor="{Binding MinRating, Converter={StaticResource RatingToColorConverter}, ConverterParameter=3}">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectRatingCommand}" CommandParameter="3"/>
+                                    </Label.GestureRecognizers>
+                                </Label>
+                                <Label Text="★" 
+                                       FontSize="32" 
+                                       TextColor="{Binding MinRating, Converter={StaticResource RatingToColorConverter}, ConverterParameter=4}">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectRatingCommand}" CommandParameter="4"/>
+                                    </Label.GestureRecognizers>
+                                </Label>
+                                <Label Text="★" 
+                                       FontSize="32" 
+                                       TextColor="{Binding MinRating, Converter={StaticResource RatingToColorConverter}, ConverterParameter=5}">
+                                    <Label.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding SelectRatingCommand}" CommandParameter="5"/>
+                                    </Label.GestureRecognizers>
+                                </Label>
+                            </HorizontalStackLayout>
+                            
+                            <Label Text="{Binding MinRating, StringFormat='{0} stars and above'}"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   HorizontalOptions="Center"
+                                   FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+                    </Border>
+                </VerticalStackLayout>
+
+                <!-- Locations Section -->
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{local:Translate Filter_Locations}"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#0E2A47"/>
+                    
+                    <!-- Location Filters -->
+                    <VerticalStackLayout Spacing="12">
+                        <!-- 24 Hours Open -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="{local:Translate Filter_24HoursOpen}"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   VerticalOptions="Center"/>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding Is24HoursOpen}"
+                                    OnColor="#F79A1B"
+                                    ThumbColor="White"/>
+                        </Grid>
+
+                        <!-- Available Now -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="{local:Translate Filter_AvailableNow}"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   VerticalOptions="Center"/>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding IsAvailableNow}"
+                                    OnColor="#F79A1B"
+                                    ThumbColor="White"/>
+                        </Grid>
+
+                        <!-- Free Parking -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="{local:Translate Filter_FreeParking}"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   VerticalOptions="Center"/>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding HasFreeParking}"
+                                    OnColor="#F79A1B"
+                                    ThumbColor="White"/>
+                        </Grid>
+
+                        <!-- Wifi -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="{local:Translate Filter_Wifi}"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   VerticalOptions="Center"/>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding HasWifi}"
+                                    OnColor="#F79A1B"
+                                    ThumbColor="White"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+                <!-- Connector Types Section -->
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="{local:Translate Filter_ConnectorTypes}"
+                           FontSize="16"
+                           FontAttributes="Bold"
+                           TextColor="#0E2A47"/>
+                    
+                    <!-- Connector Type Filters -->
+                    <VerticalStackLayout Spacing="12">
+                        <!-- Type 2 (AC) -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="Type 2 (AC)"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   VerticalOptions="Center"/>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding HasType2AC}"
+                                    OnColor="#F79A1B"
+                                    ThumbColor="White"/>
+                        </Grid>
+
+                        <!-- CCS2 (DC) -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="CCS2 (DC)"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   VerticalOptions="Center"/>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding HasCCS2DC}"
+                                    OnColor="#F79A1B"
+                                    ThumbColor="White"/>
+                        </Grid>
+
+                        <!-- CHAdeMO -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="CHAdeMO"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   VerticalOptions="Center"/>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding HasCHAdeMO}"
+                                    OnColor="#F79A1B"
+                                    ThumbColor="White"/>
+                        </Grid>
+
+                        <!-- Type 1 (AC) -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="Type 1 (AC)"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   VerticalOptions="Center"/>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding HasType1AC}"
+                                    OnColor="#F79A1B"
+                                    ThumbColor="White"/>
+                        </Grid>
+
+                        <!-- GB/T -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Text="GB/T"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   VerticalOptions="Center"/>
+                            <Switch Grid.Column="1"
+                                    IsToggled="{Binding HasGBT}"
+                                    OnColor="#F79A1B"
+                                    ThumbColor="White"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Bottom Buttons -->
+        <Grid Grid.Row="1"
+              ColumnDefinitions="*,*"
+              ColumnSpacing="12"
+              Padding="16,8,16,16">
+            
+            <!-- Reset Button -->
+            <Border Grid.Column="0"
+                    BackgroundColor="#E8E8E8"
+                    StrokeThickness="0"
+                    HeightRequest="50"
+                    Padding="12">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <Label Text="{local:Translate Reset}"
+                       TextColor="#333333"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"/>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ResetCommand}"/>
+                </Border.GestureRecognizers>
+            </Border>
+
+            <!-- Apply Button -->
+            <Border Grid.Column="1"
+                    BackgroundColor="#F79A1B"
+                    StrokeThickness="0"
+                    HeightRequest="50"
+                    Padding="12">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="8"/>
+                </Border.StrokeShape>
+                <Label Text="{local:Translate Apply}"
+                       TextColor="White"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"/>
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding ApplyCommand}"/>
+                </Border.GestureRecognizers>
+            </Border>
+        </Grid>
+
+        <!-- Loading Overlay -->
+        <controls:LoadingOverlay Grid.RowSpan="2"
+                                IsVisible="{Binding IsBusy}" 
+                                LoadingText="{local:Translate Filter_ApplyingFilters}"/>
+    </Grid>
+
+</ContentPage>

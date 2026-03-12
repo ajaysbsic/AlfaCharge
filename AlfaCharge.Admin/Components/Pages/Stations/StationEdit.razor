@@ -1,0 +1,230 @@
+@page "/stations/new"
+@page "/stations/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject StationService StationService
+@inject LocationService LocationService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject ILogger<StationEdit> Logger
+
+<PageTitle>@(_isNew ? "New Station" : "Edit Station") - AlfaCharge Admin</PageTitle>
+
+<MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">@(_isNew ? "Create New Station" : "Edit Station")</MudText>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <EditForm Model="_model" OnValidSubmit="SaveAsync">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.ChargePointId" 
+                                  Label="Charge Point ID" 
+                                  Required="true"
+                                  RequiredError="Charge Point ID is required"
+                                  Disabled="@(!_isNew)"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.StationName" 
+                                  Label="Station Name" 
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_model.LocationId" 
+                               Label="Location" 
+                               Variant="Variant.Outlined" 
+                               Clearable="true">
+                        @foreach (var loc in _locations)
+                        {
+                            <MudSelectItem Value="@loc.LocationId">@loc.LocationName (@loc.LocationId)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.Model" 
+                                  Label="Model" 
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.SerialNumber" 
+                                  Label="Serial Number" 
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.FirmwareVersion" 
+                                  Label="Firmware Version" 
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_model.ConnectorCount" 
+                                     Label="Number of Connectors" 
+                                     Variant="Variant.Outlined"
+                                     Min="1" Max="10" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-4" />
+
+            <div class="d-flex gap-2">
+                <MudButton ButtonType="ButtonType.Submit" 
+                           Variant="Variant.Filled" 
+                           Color="Color.Primary"
+                           Disabled="_saving">
+                    @if (_saving)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    }
+                    @(_isNew ? "Create" : "Save")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4">@_error</MudAlert>
+            }
+        </EditForm>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private bool _isNew => Id is null;
+    private bool _loading = true;
+    private bool _saving;
+    private string? _error;
+    private StationEditModel _model = new();
+    private List<LocationViewModel> _locations = [];
+    private List<BreadcrumbItem> _breadcrumbs = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbs =
+        [
+            new BreadcrumbItem("Stations", "/stations"),
+            new BreadcrumbItem(_isNew ? "New" : "Edit", null, disabled: true)
+        ];
+
+        await LoadLocationsAsync();
+
+        if (!_isNew)
+        {
+            await LoadStationAsync();
+        }
+        else
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadLocationsAsync()
+    {
+        var result = await LocationService.GetAllLocationsAsync();
+        if (result.IsSuccess && result.Data is not null)
+        {
+            _locations = result.Data;
+        }
+    }
+
+    private async Task LoadStationAsync()
+    {
+        try
+        {
+            var result = await StationService.GetStationAsync(Id!.Value);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                var station = result.Data;
+                _model = new StationEditModel
+                {
+                    ChargePointId = station.ChargePointId,
+                    StationName = station.StationName,
+                    LocationId = station.LocationId,
+                    Model = station.Model,
+                    FirmwareVersion = station.FirmwareVersion,
+                    SerialNumber = station.SerialNumber,
+                    ConnectorCount = station.ConnectorCount
+                };
+                _breadcrumbs[1] = new BreadcrumbItem($"Edit: {station.ChargePointId}", null, disabled: true);
+            }
+            else
+            {
+                _error = "Station not found";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading station {Id}", Id);
+            _error = "Failed to load station";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _error = null;
+
+        try
+        {
+            if (_isNew)
+            {
+                var result = await StationService.CreateStationAsync(_model);
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Station created successfully", Severity.Success);
+                    Navigation.NavigateTo("/stations");
+                }
+                else
+                {
+                    _error = result.Error ?? "Failed to create station";
+                }
+            }
+            else
+            {
+                var result = await StationService.UpdateStationAsync(Id!.Value, _model);
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Station updated successfully", Severity.Success);
+                    Navigation.NavigateTo($"/stations/{Id}");
+                }
+                else
+                {
+                    _error = result.Error ?? "Failed to update station";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error saving station");
+            _error = "An unexpected error occurred";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        if (_isNew)
+        {
+            Navigation.NavigateTo("/stations");
+        }
+        else
+        {
+            Navigation.NavigateTo($"/stations/{Id}");
+        }
+    }
+}

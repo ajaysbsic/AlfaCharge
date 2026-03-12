@@ -1,0 +1,24 @@
+﻿<?xml version = "1.0" encoding = "UTF-8" ?>
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:AlfaGrid"
+             xmlns:converters="clr-namespace:AlfaGrid.Source.Converters"
+             x:Class="AlfaGrid.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Colors must be merged BEFORE styles so StaticResource lookups in styles resolve at parse time -->
+                <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Converters -->
+            <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
+            <converters:BoolInverseConverter x:Key="InvertedBoolConverter"/>
+            <converters:BoolToTabBackgroundConverter x:Key="BoolToTabBackgroundConverter"/>
+            <converters:BoolToTabTextColorConverter x:Key="BoolToTabTextColorConverter"/>
+            <converters:StringNotNullOrEmptyConverter x:Key="StringNotNullOrEmptyConverter"/>
+            <converters:RatingToColorConverter x:Key="RatingToColorConverter"/>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

@@ -1,0 +1,238 @@
+@page "/ocpp-logs"
+@rendermode InteractiveServer
+@inject OcppLogClient OcppLogClient
+@inject IDialogService DialogService
+@inject ILogger<OcppLogs> Logger
+
+<PageTitle>OCPP Logs - AlfaCharge Admin</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">OCPP Logs</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+            <MudTextField @bind-Value="_query.Search" 
+                          Label="Search" 
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.End" 
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          DebounceInterval="400"
+                          OnDebounceIntervalElapsed="OnSearchChanged" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect T="string" @bind-Value="_query.ChargePointId" 
+                       Label="Charge Point" 
+                       Variant="Variant.Outlined" 
+                       Clearable="true">
+                @foreach (var cp in _chargePoints)
+                {
+                    <MudSelectItem Value="@cp">@cp</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect T="string" @bind-Value="_query.Action" 
+                       Label="Action" 
+                       Variant="Variant.Outlined" 
+                       Clearable="true">
+                @foreach (var action in _actions)
+                {
+                    <MudSelectItem Value="@action">@action</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect T="string" @bind-Value="_query.Direction" 
+                       Label="Direction" 
+                       Variant="Variant.Outlined" 
+                       Clearable="true">
+                <MudSelectItem Value="@("inbound")">CS ? CSMS</MudSelectItem>
+                <MudSelectItem Value="@("outbound")">CSMS ? CS</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ApplyFilters" FullWidth="true" Class="mt-2">
+                Apply Filters
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _error = null">
+        @_error
+    </MudAlert>
+}
+
+<MudTable ServerData="LoadLogsAsync" 
+          @ref="_table"
+          Dense="true" 
+          Hover="true" 
+          Bordered="true"
+          Striped="true"
+          Loading="_loading"
+          OnRowClick="ShowLogDetails"
+          T="OcppLogViewModel"
+          RowStyle="cursor: pointer;">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="timestamp" T="OcppLogViewModel">Timestamp (UTC)</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="chargepointid" T="OcppLogViewModel">Charge Point</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="direction" T="OcppLogViewModel">Direction</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="action" T="OcppLogViewModel">Action</MudTableSortLabel></MudTh>
+        <MudTh>Message ID</MudTh>
+        <MudTh>Payload</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Timestamp">@context.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+        <MudTd DataLabel="Charge Point"><code>@context.ChargePointId</code></MudTd>
+        <MudTd DataLabel="Direction">
+            <MudChip T="string" Color="@(context.Direction == "inbound" ? Color.Info : Color.Warning)" Size="Size.Small">
+                @(context.Direction == "inbound" ? "CS?CSMS" : "CSMS?CS")
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Action">@(context.Action ?? "-")</MudTd>
+        <MudTd DataLabel="Message ID"><code>@(context.MessageId ?? "-")</code></MudTd>
+        <MudTd DataLabel="Payload">
+            <MudTooltip Text="@context.PayloadJson" Placement="Placement.Left">
+                <MudText Typo="Typo.body2" Style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    @context.TruncatedPayload
+                </MudText>
+            </MudTooltip>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No logs found.</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 25, 50, 100, 200 }" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private MudTable<OcppLogViewModel>? _table;
+    private bool _loading;
+    private string? _error;
+    private OcppLogQuery _query = new() { PageSize = 50 };
+    private List<string> _chargePoints = [];
+    private List<string> _actions = [];
+    private CancellationTokenSource? _cts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFiltersAsync();
+    }
+
+    private async Task LoadFiltersAsync()
+    {
+        var chargePointsTask = OcppLogClient.GetChargePointsAsync();
+        var actionsTask = OcppLogClient.GetActionsAsync();
+
+        await Task.WhenAll(chargePointsTask, actionsTask);
+
+        var cpResult = await chargePointsTask;
+        if (cpResult.IsSuccess && cpResult.Data is not null)
+        {
+            _chargePoints = cpResult.Data;
+        }
+
+        var actionsResult = await actionsTask;
+        if (actionsResult.IsSuccess && actionsResult.Data is not null)
+        {
+            _actions = actionsResult.Data;
+        }
+    }
+
+    private async Task<TableData<OcppLogViewModel>> LoadLogsAsync(TableState state, CancellationToken ct)
+    {
+        _cts?.Cancel();
+        _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+
+        try
+        {
+            _loading = true;
+            _error = null;
+
+            _query.Page = state.Page + 1;
+            _query.PageSize = state.PageSize;
+            _query.SortBy = state.SortLabel;
+            _query.SortDescending = state.SortDirection == SortDirection.Descending;
+
+            var result = await OcppLogClient.GetLogsAsync(_query, _cts.Token);
+
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return new TableData<OcppLogViewModel>
+                {
+                    Items = result.Data.Items,
+                    TotalItems = result.Data.TotalCount
+                };
+            }
+            else
+            {
+                _error = result.Error ?? "Failed to load logs";
+                return new TableData<OcppLogViewModel> { Items = [], TotalItems = 0 };
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return new TableData<OcppLogViewModel> { Items = [], TotalItems = 0 };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading OCPP logs");
+            _error = "Failed to load logs";
+            return new TableData<OcppLogViewModel> { Items = [], TotalItems = 0 };
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnSearchChanged()
+    {
+        if (_table is not null)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        if (_table is not null)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task ShowLogDetails(TableRowClickEventArgs<OcppLogViewModel> args)
+    {
+        if (args.Item is null) return;
+
+        var parameters = new DialogParameters<OcppLogDetailDialog>
+        {
+            { x => x.Log, args.Item }
+        };
+
+        var options = new DialogOptions
+        {
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        };
+
+        await DialogService.ShowAsync<OcppLogDetailDialog>("OCPP Log Details", parameters, options);
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}

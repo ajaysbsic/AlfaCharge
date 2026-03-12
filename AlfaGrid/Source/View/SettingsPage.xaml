@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AlfaGrid.Source.View.SettingsPage"
+             xmlns:viewModel="clr-namespace:AlfaGrid.Source.ViewModel"
+             xmlns:local="clr-namespace:AlfaGrid.Source.Converters"
+             x:DataType="viewModel:SettingsPageViewModel"
+             Title="{local:Translate Settings_Title}"
+             Shell.NavBarIsVisible="True"
+             BackgroundColor="#F5F5F5">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="16" Spacing="20">
+            
+            <!-- Page Title -->
+            <Label Text="{local:Translate Settings_Title}"
+                   FontSize="24"
+                   FontAttributes="Bold"
+                   TextColor="#0E2A47"
+                   Margin="0,16,0,8"/>
+
+            <!-- Notifications Section -->
+            <VerticalStackLayout Spacing="12">
+                <Label Text="{local:Translate Settings_Notifications}"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       TextColor="#0E2A47"/>
+
+                <Border BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="16,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="{local:Translate Settings_PushNotifications}"
+                               FontSize="15"
+                               TextColor="#333333"
+                               VerticalOptions="Center"/>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding IsPushNotificationsEnabled}"
+                                VerticalOptions="Center">
+                            <Switch.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding TogglePushNotificationsCommand}" />
+                            </Switch.GestureRecognizers>
+                        </Switch>
+                    </Grid>
+                </Border>
+
+                <Border BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="16,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="{local:Translate Settings_EmailNotifications}"
+                               FontSize="15"
+                               TextColor="#333333"
+                               VerticalOptions="Center"/>
+                        <Switch Grid.Column="1"
+                                IsToggled="{Binding IsEmailNotificationsEnabled}"
+                                VerticalOptions="Center">
+                            <Switch.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding ToggleEmailNotificationsCommand}" />
+                            </Switch.GestureRecognizers>
+                        </Switch>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- App Settings Section -->
+            <VerticalStackLayout Spacing="12" Margin="0,12,0,0">
+                <Label Text="{local:Translate Settings_General}"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       TextColor="#0E2A47"/>
+
+                <!-- Language selection row -->
+                <Border BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="16,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="{local:Translate Settings_Language}"
+                               FontSize="15"
+                               TextColor="#333333"
+                               VerticalOptions="Center"/>
+                        <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                            <Label Text="{Binding SelectedLanguageDisplay}"
+                                   FontSize="15"
+                                   TextColor="#6D7A8A"
+                                   VerticalOptions="Center"/>
+                            <Image Source="arrow_right.png"
+                                   HeightRequest="16"
+                                   WidthRequest="16"
+                                   VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </Grid>
+                    <Border.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding SelectLanguageCommand}"/>
+                    </Border.GestureRecognizers>
+                </Border>
+
+                <Border BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="16,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="Dark Mode"
+                               FontSize="15"
+                               TextColor="#333333"
+                               VerticalOptions="Center"/>
+                        <Switch Grid.Column="1"
+                                IsToggled="False"
+                                VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- About Section -->
+            <VerticalStackLayout Spacing="12" Margin="0,12,0,0">
+                <Label Text="{local:Translate Settings_About}"
+                       FontSize="16"
+                       FontAttributes="Bold"
+                       TextColor="#0E2A47"/>
+
+                <Border BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="16,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="{local:Translate Settings_Version}"
+                               FontSize="15"
+                               TextColor="#333333"
+                               VerticalOptions="Center"/>
+                        <Label Grid.Column="1"
+                               Text="9.0.0"
+                               FontSize="15"
+                               TextColor="#6D7A8A"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
+                <Border BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="16,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="{local:Translate Settings_TermsAndConditions}"
+                               FontSize="15"
+                               TextColor="#333333"
+                               VerticalOptions="Center"/>
+                        <Image Grid.Column="1"
+                               Source="arrow_right.png"
+                               HeightRequest="16"
+                               WidthRequest="16"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+
+                <Border BackgroundColor="White"
+                        StrokeThickness="0"
+                        Padding="16,12">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Text="{local:Translate Settings_PrivacyPolicy}"
+                               FontSize="15"
+                               TextColor="#333333"
+                               VerticalOptions="Center"/>
+                        <Image Grid.Column="1"
+                               Source="arrow_right.png"
+                               HeightRequest="16"
+                               WidthRequest="16"
+                               VerticalOptions="Center"/>
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AlfaGrid.Source.View.QRScannerPage"
+             xmlns:viewModel="clr-namespace:AlfaGrid.Source.ViewModel"
+             xmlns:handlers="clr-namespace:AlfaGrid.Source.Handler"
+             xmlns:controls="clr-namespace:AlfaGrid.Source.Controls"
+             x:DataType="viewModel:QRScannerPageViewModel"
+             Title="Scan QR Code"
+             Shell.NavBarIsVisible="True"
+             BackgroundColor="White">
+
+    <Grid RowDefinitions="Auto,*,Auto,Auto,Auto">
+        
+        <!-- Instructions -->
+        <Label Grid.Row="0"
+               Text="Focus on the QR Code"
+               FontSize="18"
+               FontAttributes="Bold"
+               TextColor="#0E2A47"
+               HorizontalOptions="Center"
+               Margin="16,24,16,16"/>
+
+        <!-- QR Scanner Area (Camera Placeholder) -->
+        <Border Grid.Row="1"
+                Margin="32,0,32,0"
+                BackgroundColor="#4A4A4A"
+                StrokeThickness="0">
+            <Grid>
+                <!-- Camera view placeholder - will be replaced with actual camera control -->
+                <Label Text="Camera View"
+                       TextColor="White"
+                       FontSize="16"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center"
+                       Opacity="0.3"/>
+                
+                <!-- Orange scanning frame -->
+                <Border StrokeThickness="3"
+                        Stroke="#F79A1B"
+                        BackgroundColor="Transparent"
+                        Margin="40"
+                        VerticalOptions="Center"
+                        HorizontalOptions="Center"
+                        WidthRequest="280"
+                        HeightRequest="280">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Flash Button -->
+        <Border Grid.Row="2"
+                Margin="0,24,0,0"
+                BackgroundColor="#F79A1B"
+                StrokeThickness="0"
+                HorizontalOptions="Center"
+                WidthRequest="120"
+                HeightRequest="45"
+                Padding="16,10">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="22"/>
+            </Border.StrokeShape>
+            <Label Text="Flash"
+                   TextColor="White"
+                   FontSize="16"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"/>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding OnFlashCommand}"/>
+            </Border.GestureRecognizers>
+        </Border>
+
+        <!-- Manual Entry Section -->
+        <VerticalStackLayout Grid.Row="3"
+                           Padding="32,32,32,16"
+                           Spacing="16">
+            
+            <Label Text="Or enter EVSE ID manually"
+                   FontSize="14"
+                   TextColor="#666666"
+                   HorizontalOptions="Center"
+                   Margin="0,0,0,8"/>
+            
+            <!-- EVSE ID Entry -->
+            <Border BackgroundColor="Transparent"
+                    StrokeThickness="0">
+                <Grid>
+                    <handlers:BorderlessEntry Placeholder="Enter EVSE ID"
+                                              Text="{Binding EvseId}"
+                                              FontSize="16"
+                                              TextColor="#333333"
+                                              PlaceholderColor="#999999"
+                                              BackgroundColor="Transparent"
+                                              HeightRequest="50"/>
+                    <!-- Bottom border line -->
+                    <BoxView HeightRequest="1"
+                             Color="#E0E0E0"
+                             VerticalOptions="End"
+                             HorizontalOptions="Fill"/>
+                </Grid>
+            </Border>
+        </VerticalStackLayout>
+
+        <!-- Verify Button -->
+        <Border Grid.Row="4"
+                Margin="32,0,32,32"
+                BackgroundColor="#F79A1B"
+                StrokeThickness="0"
+                HeightRequest="56"
+                Padding="16">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="28"/>
+            </Border.StrokeShape>
+            <Label Text="Verify"
+                   TextColor="White"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"/>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding VerifyCommand}"/>
+            </Border.GestureRecognizers>
+        </Border>
+
+        <!-- Loading Overlay -->
+        <controls:LoadingOverlay IsVisible="{Binding IsBusy}" 
+                                LoadingText="Verifying..."/>
+    </Grid>
+
+</ContentPage>

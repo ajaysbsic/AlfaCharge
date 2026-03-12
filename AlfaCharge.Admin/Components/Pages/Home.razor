@@ -1,0 +1,333 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject MetricsService MetricsService
+@inject ILogger<Home> Logger
+
+<PageTitle>Dashboard - AlfaCharge Admin</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Dashboard</MudText>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4">@_error</MudAlert>
+}
+
+<!-- KPI Cards -->
+<MudGrid Class="mb-4">
+    <MudItem xs="12" sm="6" md="4" lg="2">
+        <MudCard>
+            <MudCardContent Class="d-flex flex-column align-center">
+                <MudIcon Icon="@Icons.Material.Filled.EvStation" Color="Color.Success" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Class="mt-2">@_metrics.ActiveStations</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Active Stations</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4" lg="2">
+        <MudCard>
+            <MudCardContent Class="d-flex flex-column align-center">
+                <MudIcon Icon="@Icons.Material.Filled.BatteryChargingFull" Color="Color.Primary" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Class="mt-2">@_metrics.ChargingSessionsToday</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Sessions Today</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4" lg="2">
+        <MudCard>
+            <MudCardContent Class="d-flex flex-column align-center">
+                <MudIcon Icon="@Icons.Material.Filled.Bolt" Color="Color.Warning" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Class="mt-2">@_metrics.KwhDeliveredToday.ToString("N1")</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">kWh Today</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4" lg="2">
+        <MudCard>
+            <MudCardContent Class="d-flex flex-column align-center">
+                <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Class="mt-2">@_metrics.FaultedStations</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Faulted Stations</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4" lg="2">
+        <MudCard>
+            <MudCardContent Class="d-flex flex-column align-center">
+                <MudIcon Icon="@Icons.Material.Filled.SystemUpdate" Color="Color.Info" Size="Size.Large" />
+                <MudText Typo="Typo.h4" Class="mt-2">@_metrics.PendingFirmwareUpdates</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Pending Updates</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="4" lg="2">
+        <MudCard>
+            <MudCardContent Class="d-flex flex-column align-center">
+                <MudSwitch T="bool" @bind-Value="_autoRefresh" Color="Color.Primary" Label="Auto Refresh" />
+                <MudText Typo="Typo.caption" Color="Color.Secondary">30s interval</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<!-- Charts Row 1 -->
+<MudGrid Class="mb-4">
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-2">Sessions per Hour (Last 24h)</MudText>
+            @if (_sessionsData.Data.Count > 0)
+            {
+                <MudChart ChartType="ChartType.Line" 
+                          ChartSeries="@_sessionsChartSeries" 
+                          XAxisLabels="@_sessionsLabels"
+                          Width="100%" Height="300px" />
+            }
+            else
+            {
+                <MudText Color="Color.Secondary">No data available</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-2">Energy Delivered (kWh) by Day</MudText>
+            @if (_energyData.Data.Count > 0)
+            {
+                <MudChart ChartType="ChartType.Bar" 
+                          ChartSeries="@_energyChartSeries" 
+                          XAxisLabels="@_energyLabels"
+                          Width="100%" Height="300px" />
+            }
+            else
+            {
+                <MudText Color="Color.Secondary">No data available</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<!-- Charts Row 2 -->
+<MudGrid>
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-2">OCPP Traffic (Last 24h)</MudText>
+            @if (_trafficData.InboundData.Count > 0 || _trafficData.OutboundData.Count > 0)
+            {
+                <MudChart ChartType="ChartType.Line" 
+                          ChartSeries="@_trafficChartSeries" 
+                          XAxisLabels="@_trafficLabels"
+                          Width="100%" Height="300px" />
+            }
+            else
+            {
+                <MudText Color="Color.Secondary">No data available</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="6">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-2">Top Errors (Last 7 Days)</MudText>
+            @if (_errorsData.Data.Count > 0)
+            {
+                <MudChart ChartType="ChartType.Bar" 
+                          ChartSeries="@_errorsChartSeries" 
+                          XAxisLabels="@_errorsLabels"
+                          Width="100%" Height="300px" />
+            }
+            else
+            {
+                <MudText Color="Color.Secondary">No errors recorded</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private bool _loading = true;
+    private string? _error;
+    private bool _autoRefresh = false;
+    private CancellationTokenSource? _refreshCts;
+    private Timer? _refreshTimer;
+
+    private DashboardMetrics _metrics = new();
+    private SessionsChartData _sessionsData = new();
+    private EnergyChartData _energyData = new();
+    private OcppTrafficChartData _trafficData = new();
+    private ErrorsChartData _errorsData = new();
+
+    // Chart data
+    private List<ChartSeries> _sessionsChartSeries = [];
+    private string[] _sessionsLabels = [];
+    private List<ChartSeries> _energyChartSeries = [];
+    private string[] _energyLabels = [];
+    private List<ChartSeries> _trafficChartSeries = [];
+    private string[] _trafficLabels = [];
+    private List<ChartSeries> _errorsChartSeries = [];
+    private string[] _errorsLabels = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_autoRefresh && _refreshTimer is null)
+        {
+            _refreshTimer = new Timer(async _ => await RefreshAsync(), null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+        }
+        else if (!_autoRefresh && _refreshTimer is not null)
+        {
+            _refreshTimer.Dispose();
+            _refreshTimer = null;
+        }
+    }
+
+    private async Task RefreshAsync()
+    {
+        await InvokeAsync(async () =>
+        {
+            await LoadDataAsync();
+            StateHasChanged();
+        });
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        _error = null;
+        _refreshCts?.Cancel();
+        _refreshCts = new CancellationTokenSource();
+
+        try
+        {
+            var ct = _refreshCts.Token;
+
+            // Load all data in parallel
+            var metricsTask = MetricsService.GetDashboardMetricsAsync(ct);
+            var sessionsTask = MetricsService.GetSessionsChartAsync(ct);
+            var energyTask = MetricsService.GetEnergyChartAsync(ct);
+            var trafficTask = MetricsService.GetOcppTrafficChartAsync(ct);
+            var errorsTask = MetricsService.GetErrorsChartAsync(ct);
+
+            await Task.WhenAll(metricsTask, sessionsTask, energyTask, trafficTask, errorsTask);
+
+            var metricsResult = await metricsTask;
+            if (metricsResult.IsSuccess && metricsResult.Data is not null)
+            {
+                _metrics = metricsResult.Data;
+            }
+
+            var sessionsResult = await sessionsTask;
+            if (sessionsResult.IsSuccess && sessionsResult.Data is not null)
+            {
+                _sessionsData = sessionsResult.Data;
+                UpdateSessionsChart();
+            }
+
+            var energyResult = await energyTask;
+            if (energyResult.IsSuccess && energyResult.Data is not null)
+            {
+                _energyData = energyResult.Data;
+                UpdateEnergyChart();
+            }
+
+            var trafficResult = await trafficTask;
+            if (trafficResult.IsSuccess && trafficResult.Data is not null)
+            {
+                _trafficData = trafficResult.Data;
+                UpdateTrafficChart();
+            }
+
+            var errorsResult = await errorsTask;
+            if (errorsResult.IsSuccess && errorsResult.Data is not null)
+            {
+                _errorsData = errorsResult.Data;
+                UpdateErrorsChart();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Cancelled, ignore
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading dashboard data");
+            _error = "Failed to load dashboard data. Please try again.";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void UpdateSessionsChart()
+    {
+        _sessionsLabels = _sessionsData.Data.Select(d => d.Label).ToArray();
+        _sessionsChartSeries =
+        [
+            new ChartSeries { Name = "Sessions", Data = _sessionsData.Data.Select(d => d.Value).ToArray() }
+        ];
+    }
+
+    private void UpdateEnergyChart()
+    {
+        _energyLabels = _energyData.Data.Select(d => d.Label).ToArray();
+        _energyChartSeries =
+        [
+            new ChartSeries { Name = "kWh", Data = _energyData.Data.Select(d => d.Value).ToArray() }
+        ];
+    }
+
+    private void UpdateTrafficChart()
+    {
+        var allLabels = _trafficData.InboundData.Select(d => d.Label)
+            .Union(_trafficData.OutboundData.Select(d => d.Label))
+            .OrderBy(l => l)
+            .ToArray();
+        
+        _trafficLabels = allLabels;
+        _trafficChartSeries =
+        [
+            new ChartSeries 
+            { 
+                Name = "Inbound (CS→CSMS)", 
+                Data = allLabels.Select(l => 
+                    _trafficData.InboundData.FirstOrDefault(d => d.Label == l)?.Value ?? 0).ToArray() 
+            },
+            new ChartSeries 
+            { 
+                Name = "Outbound (CSMS→CS)", 
+                Data = allLabels.Select(l => 
+                    _trafficData.OutboundData.FirstOrDefault(d => d.Label == l)?.Value ?? 0).ToArray() 
+            }
+        ];
+    }
+
+    private void UpdateErrorsChart()
+    {
+        _errorsLabels = _errorsData.Data.Select(d => d.Label).ToArray();
+        _errorsChartSeries =
+        [
+            new ChartSeries { Name = "Occurrences", Data = _errorsData.Data.Select(d => d.Value).ToArray() }
+        ];
+    }
+
+    public void Dispose()
+    {
+        _refreshCts?.Cancel();
+        _refreshCts?.Dispose();
+        _refreshTimer?.Dispose();
+    }
+}

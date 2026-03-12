@@ -1,0 +1,538 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AlfaGrid.Source.View.LocationDetailsPage"
+             xmlns:viewModel="clr-namespace:AlfaGrid.Source.ViewModel"
+             xmlns:models="clr-namespace:AlfaGrid.Source.Models"
+             xmlns:controls="clr-namespace:AlfaGrid.Source.Controls"
+             x:DataType="viewModel:LocationDetailsPageViewModel"
+             Title="Location Details"
+             Shell.NavBarIsVisible="True">
+
+    <Grid RowDefinitions="*,Auto">
+        
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Spacing="0">
+                
+                <!-- Location Image Placeholder -->
+                <Border BackgroundColor="#E8E8E8"
+                        HeightRequest="250"
+                        StrokeThickness="0">
+                    <VerticalStackLayout VerticalOptions="Center" 
+                                       HorizontalOptions="Center"
+                                       Spacing="12">
+                        <Image Source="station_placeholder.png"
+                               HeightRequest="120"
+                               WidthRequest="200"
+                               Aspect="AspectFit"
+                               Opacity="0.3"/>
+                        <Label Text="No location images available"
+                               TextColor="#999999"
+                               FontSize="14"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Location Information -->
+                <VerticalStackLayout Padding="16" Spacing="8">
+                    <!-- Location Name -->
+                    <Label Text="{Binding SelectedLocation.Name}"
+                           FontSize="24"
+                           FontAttributes="Bold"
+                           TextColor="#0E2A47"/>
+
+                    <!-- Address -->
+                    <Label Text="{Binding SelectedLocation.Address}"
+                           FontSize="14"
+                           TextColor="#6D7A8A"/>
+
+                    <!-- Reviews Placeholder -->
+                    <Label Text="No Reviews Available"
+                           FontSize="12"
+                           TextColor="#999999"
+                           Margin="0,4,0,0"/>
+
+                    <!-- Open Status -->
+                    <Label Text="{Binding SelectedLocation.OperatingHours}"
+                           FontSize="14"
+                           FontAttributes="Bold"
+                           TextColor="#0066FF"
+                           Margin="0,8,0,0"/>
+                </VerticalStackLayout>
+
+                <!-- EVSE/Connector Details Section (Shown when from QR Scanner) -->
+                <Border IsVisible="{Binding IsFromQRScanner}"
+                        Margin="16,8,16,16"
+                        BackgroundColor="#F5F7FB"
+                        StrokeThickness="0"
+                        Padding="16">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="12"/>
+                    </Border.StrokeShape>
+                    
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="SOCKET"
+                               FontSize="11"
+                               TextColor="#999999"
+                               FontAttributes="Bold"/>
+                        
+                        <Label Text="{Binding SelectedConnectorType}"
+                               FontSize="16"
+                               TextColor="#333333"
+                               FontAttributes="Bold"/>
+                        
+                        <Grid ColumnDefinitions="Auto,*" 
+                              RowDefinitions="Auto,Auto"
+                              ColumnSpacing="12"
+                              RowSpacing="8"
+                              Margin="0,12,0,0">
+                            
+                            <!-- Max Power -->
+                            <Label Grid.Row="0" Grid.Column="0"
+                                   Text="Max Power"
+                                   FontSize="14"
+                                   TextColor="#666666"/>
+                            <Label Grid.Row="0" Grid.Column="1"
+                                   Text="{Binding MaxPower}"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="End"/>
+                            
+                            <!-- Tariff Description -->
+                            <Label Grid.Row="1" Grid.Column="0"
+                                   Text="Tariff Description"
+                                   FontSize="14"
+                                   TextColor="#666666"/>
+                            <Label Grid.Row="1" Grid.Column="1"
+                                   Text="Free Tariff"
+                                   FontSize="14"
+                                   TextColor="#333333"
+                                   FontAttributes="Bold"
+                                   HorizontalOptions="End"/>
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Facilities Section -->
+                <VerticalStackLayout Padding="16,0,16,16" Spacing="12"
+                                   IsVisible="{Binding IsFromQRScanner}">
+                    <Label Text="FACILITIES"
+                           FontSize="12"
+                           FontAttributes="Bold"
+                           TextColor="#999999"
+                           Margin="0,8,0,0"/>
+
+                    <!-- Facilities Grid -->
+                    <FlexLayout BindableLayout.ItemsSource="{Binding SelectedLocation.Facilities}"
+                               Wrap="Wrap"
+                               JustifyContent="Start"
+                               AlignItems="Start"
+                               AlignContent="Start">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="models:Facility">
+                                <VerticalStackLayout Spacing="8" 
+                                                   Margin="0,0,16,24"
+                                                   WidthRequest="90"
+                                                   HorizontalOptions="Start">
+                                    <Label Text="{Binding Icon}" 
+                                           FontFamily="MaterialIcons" 
+                                           FontSize="32" 
+                                           TextColor="#666666" 
+                                           HorizontalOptions="Center"/>
+                                    <Label Text="{Binding Name}"
+                                           FontSize="12"
+                                           TextColor="#333333"
+                                           HorizontalOptions="Center"
+                                           HorizontalTextAlignment="Center"
+                                           LineBreakMode="WordWrap"
+                                           MaxLines="2"/>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </FlexLayout>
+                </VerticalStackLayout>
+
+                <!-- Tabs Section (Hidden when from QR Scanner) -->
+                <Grid ColumnDefinitions="*,*,*" 
+                      Margin="16,8,16,16"
+                      ColumnSpacing="8"
+                      IsVisible="{Binding IsFromQRScanner, Converter={StaticResource InvertedBoolConverter}}">
+                    
+                    <Border Grid.Column="0"
+                            BackgroundColor="{Binding IsOverviewVisible, Converter={StaticResource BoolToTabBackgroundConverter}}"
+                            StrokeShape="RoundRectangle 12"
+                            Stroke="#E0E0E0"
+                            StrokeThickness="1"
+                            Padding="12,10">
+                        <Label Text="Overview"
+                               TextColor="{Binding IsOverviewVisible, Converter={StaticResource BoolToTabTextColorConverter}}"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectTabCommand}" CommandParameter="0"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Border>
+
+                    <Border Grid.Column="1"
+                            BackgroundColor="{Binding IsPhotosVisible, Converter={StaticResource BoolToTabBackgroundConverter}}"
+                            StrokeShape="RoundRectangle 12"
+                            Stroke="#E0E0E0"
+                            StrokeThickness="1"
+                            Padding="12,10">
+                        <Label Text="Photos"
+                               TextColor="{Binding IsPhotosVisible, Converter={StaticResource BoolToTabTextColorConverter}}"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectTabCommand}" CommandParameter="1"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Border>
+
+                    <Border Grid.Column="2"
+                            BackgroundColor="{Binding IsReviewsVisible, Converter={StaticResource BoolToTabBackgroundConverter}}"
+                            StrokeShape="RoundRectangle 12"
+                            Stroke="#E0E0E0"
+                            StrokeThickness="1"
+                            Padding="12,10">
+                        <Label Text="Reviews"
+                               TextColor="{Binding IsReviewsVisible, Converter={StaticResource BoolToTabTextColorConverter}}"
+                               FontSize="14"
+                               FontAttributes="Bold"
+                               HorizontalOptions="Center">
+                            <Label.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding SelectTabCommand}" CommandParameter="2"/>
+                            </Label.GestureRecognizers>
+                        </Label>
+                    </Border>
+                </Grid>
+
+                <!-- Action Buttons -->
+                <Grid ColumnDefinitions="*,*,*,*"
+                      Margin="16,0,16,16"
+                      ColumnSpacing="12">
+                    
+                    <!-- Directions Button -->
+                    <Border Grid.Column="0"
+                            BackgroundColor="#0066FF"
+                            StrokeShape="RoundRectangle 12"
+                            Padding="12,16">
+                        <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                            <Image Source="directions_icon.png"
+                                   HeightRequest="24"
+                                   WidthRequest="24"
+                                   Aspect="AspectFit"/>
+                            <Label Text="Directions"
+                                   TextColor="White"
+                                   FontSize="12"
+                                   HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding DirectionsCommand}"/>
+                        </Border.GestureRecognizers>
+                    </Border>
+
+                    <!-- Reserve Button -->
+                    <Border Grid.Column="1"
+                            BackgroundColor="White"
+                            StrokeShape="RoundRectangle 12"
+                            Stroke="#E0E0E0"
+                            StrokeThickness="1"
+                            Padding="12,16">
+                        <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                            <Image Source="calendar_icon.png"
+                                   HeightRequest="24"
+                                   WidthRequest="24"
+                                   Aspect="AspectFit"/>
+                            <Label Text="Reserve"
+                                   TextColor="#333333"
+                                   FontSize="12"
+                                   HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ReserveCommand}"/>
+                        </Border.GestureRecognizers>
+                    </Border>
+
+                    <!-- Scan QR Button -->
+                    <Border Grid.Column="2"
+                            BackgroundColor="White"
+                            StrokeShape="RoundRectangle 12"
+                            Stroke="#E0E0E0"
+                            StrokeThickness="1"
+                            Padding="12,16">
+                        <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                            <Image Source="qr_icon.png"
+                                   HeightRequest="24"
+                                   WidthRequest="24"
+                                   Aspect="AspectFit"/>
+                            <Label Text="Scan QR"
+                                   TextColor="#333333"
+                                   FontSize="12"
+                                   HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding ScanQRCommand}"/>
+                        </Border.GestureRecognizers>
+                    </Border>
+
+                    <!-- Favorite Button -->
+                    <Border Grid.Column="3"
+                            BackgroundColor="White"
+                            StrokeShape="RoundRectangle 12"
+                            Stroke="#E0E0E0"
+                            StrokeThickness="1"
+                            Padding="12,16">
+                        <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                            <Image Source="star_icon.png"
+                                   HeightRequest="24"
+                                   WidthRequest="24"
+                                   Aspect="AspectFit"/>
+                            <Label Text="Favorite"
+                                   TextColor="#333333"
+                                   FontSize="12"
+                                   HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding FavoriteCommand}"/>
+                        </Border.GestureRecognizers>
+                    </Border>
+                </Grid>
+
+                <!-- Tab Content (Hidden when from QR Scanner) -->
+                <VerticalStackLayout Spacing="0"
+                                   IsVisible="{Binding IsFromQRScanner, Converter={StaticResource InvertedBoolConverter}}">
+                    
+                    <!-- Overview Tab Content -->
+                    <VerticalStackLayout IsVisible="{Binding IsOverviewVisible}" Spacing="12">
+                        
+                        <!-- Connectors Section -->
+                        <VerticalStackLayout Padding="16,0,16,16" Spacing="12">
+                            <!-- Connectors List -->
+                            <VerticalStackLayout BindableLayout.ItemsSource="{Binding SelectedLocation.ConnectorGroups}"
+                                               Spacing="12">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="models:ConnectorGroup">
+                                        <Border BackgroundColor="White"
+                                                StrokeShape="RoundRectangle 12"
+                                                Stroke="#E0E0E0"
+                                                StrokeThickness="1"
+                                                Padding="16">
+                                            <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+                                                
+                                                <!-- Connector Icon -->
+                                                <Border Grid.Column="0"
+                                                        BackgroundColor="#F0F4FA"
+                                                        StrokeShape="RoundRectangle 10"
+                                                        WidthRequest="48"
+                                                        HeightRequest="48"
+                                                        Padding="8">
+                                                    <Image Source="{Binding ImageSource}"
+                                                           Aspect="AspectFit"/>
+                                                </Border>
+
+                                                <!-- Connector Info -->
+                                                <VerticalStackLayout Grid.Column="1"
+                                                                   Spacing="4"
+                                                                   Margin="12,0,0,0"
+                                                                   VerticalOptions="Center">
+                                                    <Label Text="{Binding Standard}"
+                                                           FontSize="16"
+                                                           FontAttributes="Bold"
+                                                           TextColor="#0E2A47"/>
+                                                    <Label Text="{Binding AvailabilityText}"
+                                                           FontSize="12"
+                                                           TextColor="#6D7A8A"/>
+                                                </VerticalStackLayout>
+
+                                                <!-- Power Rating -->
+                                                <Label Grid.Column="2"
+                                                       Text="{Binding PowerRatingText}"
+                                                       FontSize="16"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#0E2A47"
+                                                       VerticalOptions="Center"
+                                                       Margin="0,0,12,0"/>
+
+                                                <!-- Arrow Icon -->
+                                                <Image Grid.Column="3"
+                                                       Source="arrow_right.png"
+                                                       HeightRequest="20"
+                                                       WidthRequest="20"
+                                                       VerticalOptions="Center"/>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+
+                        <!-- Facilities Section -->
+                        <VerticalStackLayout Padding="16,0,16,16" Spacing="12">
+                            <Label Text="FACILITIES"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="#999999"
+                                   Margin="0,8,0,0"/>
+
+                            <!-- Facilities Grid -->
+                            <FlexLayout BindableLayout.ItemsSource="{Binding SelectedLocation.Facilities}"
+                                       Wrap="Wrap"
+                                       JustifyContent="Start"
+                                       AlignItems="Start"
+                                       AlignContent="Start">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="models:Facility">
+                                        <VerticalStackLayout Spacing="8" 
+                                                           Margin="0,0,16,24"
+                                                           WidthRequest="90"
+                                                           HorizontalOptions="Start">
+                                            <Label Text="{Binding Icon}" 
+                                                   FontFamily="MaterialIcons" 
+                                                   FontSize="32" 
+                                                   TextColor="#666666" 
+                                                   HorizontalOptions="Center"/>
+                                            <Label Text="{Binding Name}"
+                                                   FontSize="12"
+                                                   TextColor="#333333"
+                                                   HorizontalOptions="Center"
+                                                   HorizontalTextAlignment="Center"
+                                                   LineBreakMode="WordWrap"
+                                                   MaxLines="2"/>
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </FlexLayout>
+                        </VerticalStackLayout>
+
+                        <!-- Information Section -->
+                        <VerticalStackLayout Padding="16,0,16,24" Spacing="12">
+                            <Label Text="INFORMATION"
+                                   FontSize="12"
+                                   FontAttributes="Bold"
+                                   TextColor="#999999"
+                                   Margin="0,8,0,8"/>
+
+                            <!-- Address -->
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Image Grid.Column="0"
+                                       Source="current_location_icon.png"
+                                       HeightRequest="20"
+                                       WidthRequest="20"
+                                       VerticalOptions="Start"
+                                       Margin="0,2,0,0"/>
+                                <Label Grid.Column="1"
+                                       Text="{Binding SelectedLocation.Address}"
+                                       FontSize="14"
+                                       TextColor="#333333"
+                                       LineBreakMode="WordWrap"/>
+                            </Grid>
+
+                            <!-- Operating Hours -->
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                                <Image Grid.Column="0"
+                                       Source="clock_icon.gif"
+                                       HeightRequest="20"
+                                       WidthRequest="20"
+                                       VerticalOptions="Start"
+                                       Margin="0,2,0,0"/>
+                                <Label Grid.Column="1"
+                                       Text="{Binding SelectedLocation.OperatingHours}"
+                                       FontSize="14"
+                                       TextColor="#0066FF"
+                                       FontAttributes="Bold"/>
+                            </Grid>
+
+                            <!-- Contact Person -->
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12"
+                                  IsVisible="{Binding SelectedLocation.ContactPerson, Converter={StaticResource StringNotNullOrEmptyConverter}}">
+                                <Image Grid.Column="0"
+                                       Source="user.png"
+                                       HeightRequest="20"
+                                       WidthRequest="20"
+                                       VerticalOptions="Start"
+                                       Margin="0,2,0,0"/>
+                                <Label Grid.Column="1"
+                                       Text="{Binding SelectedLocation.ContactPerson}"
+                                       FontSize="14"
+                                       TextColor="#333333"/>
+                            </Grid>
+
+                            <!-- Contact Email -->
+                            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12"
+                                  IsVisible="{Binding SelectedLocation.ContactEmail, Converter={StaticResource StringNotNullOrEmptyConverter}}">
+                                <Image Grid.Column="0"
+                                       Source="email_icon.png"
+                                       HeightRequest="20"
+                                       WidthRequest="20"
+                                       VerticalOptions="Start"
+                                       Margin="0,2,0,0"/>
+                                <Label Grid.Column="1"
+                                       Text="{Binding SelectedLocation.ContactEmail}"
+                                       FontSize="14"
+                                       TextColor="#333333"/>
+                            </Grid>
+                        </VerticalStackLayout>
+
+                    </VerticalStackLayout>
+
+                    <!-- Photos Tab Content (Placeholder) -->
+                    <VerticalStackLayout IsVisible="{Binding IsPhotosVisible}" 
+                                       Padding="16"
+                                       Spacing="12">
+                        <Label Text="Photos coming soon..."
+                               FontSize="16"
+                               TextColor="#999999"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               Margin="0,40,0,0"/>
+                    </VerticalStackLayout>
+
+                    <!-- Reviews Tab Content (Placeholder) -->
+                    <VerticalStackLayout IsVisible="{Binding IsReviewsVisible}" 
+                                       Padding="16"
+                                       Spacing="12">
+                        <Label Text="Reviews coming soon..."
+                               FontSize="16"
+                               TextColor="#999999"
+                               HorizontalOptions="Center"
+                               VerticalOptions="Center"
+                               Margin="0,40,0,0"/>
+                    </VerticalStackLayout>
+
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- START CHARGING Button (Shown when from QR Scanner) -->
+        <Border Grid.Row="1"
+                IsVisible="{Binding IsFromQRScanner}"
+                Margin="24,0,24,24"
+                BackgroundColor="#F79A1B"
+                StrokeThickness="0"
+                HeightRequest="56"
+                Padding="16">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="8"/>
+            </Border.StrokeShape>
+            <Label Text="START CHARGING"
+                   TextColor="White"
+                   FontSize="18"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"/>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding StartChargingCommand}"/>
+            </Border.GestureRecognizers>
+        </Border>
+
+        <!-- Loading Overlay -->
+        <controls:LoadingOverlay Grid.RowSpan="2"
+                                IsVisible="{Binding IsBusy}" 
+                                LoadingText="Loading..."/>
+    </Grid>
+
+</ContentPage>

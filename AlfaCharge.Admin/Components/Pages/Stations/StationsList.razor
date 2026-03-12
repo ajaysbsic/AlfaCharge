@@ -1,0 +1,269 @@
+@page "/stations"
+@rendermode InteractiveServer
+@inject StationService StationService
+@inject LocationService LocationService
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject ILogger<StationsList> Logger
+
+<PageTitle>Stations - AlfaCharge Admin</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Stations</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+            <MudTextField @bind-Value="_searchText" 
+                          Label="Search" 
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.End" 
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          DebounceInterval="400"
+                          OnDebounceIntervalElapsed="OnSearchChanged" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudSelect T="string" @bind-Value="_filterLocation" Label="Location" Variant="Variant.Outlined" Clearable="true">
+                @foreach (var loc in _locations)
+                {
+                    <MudSelectItem Value="@loc.LocationId">@loc.LocationName</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudSelect T="string" @bind-Value="_filterStatus" Label="Status" Variant="Variant.Outlined" Clearable="true">
+                <MudSelectItem Value="@("Available")">Available</MudSelectItem>
+                <MudSelectItem Value="@("Charging")">Charging</MudSelectItem>
+                <MudSelectItem Value="@("Faulted")">Faulted</MudSelectItem>
+                <MudSelectItem Value="@("Unavailable")">Unavailable</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ApplyFilters" FullWidth="true" Class="mt-2">
+                Apply Filters
+            </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" 
+                       OnClick="@(() => Navigation.NavigateTo("/stations/new"))" FullWidth="true" Class="mt-2">
+                Add Station
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _error = null">
+        @_error
+    </MudAlert>
+}
+
+<MudTable ServerData="LoadStationsAsync" 
+          @ref="_table"
+          Dense="true" 
+          Hover="true" 
+          Bordered="true"
+          Striped="true"
+          Loading="_loading"
+          LoadingProgressColor="Color.Primary">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="chargepointid" T="StationViewModel">Charge Point ID</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="name" T="StationViewModel">Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="location" T="StationViewModel">Location</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="status" T="StationViewModel">Status</MudTableSortLabel></MudTh>
+        <MudTh>Connected</MudTh>
+        <MudTh>Firmware</MudTh>
+        <MudTh>Connectors</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Charge Point ID">
+            <MudLink Href="@($"/stations/{context.Id}")">@context.ChargePointId</MudLink>
+        </MudTd>
+        <MudTd DataLabel="Name">@(context.StationName ?? "-")</MudTd>
+        <MudTd DataLabel="Location">@(context.LocationName ?? context.LocationId ?? "-")</MudTd>
+        <MudTd DataLabel="Status">
+            <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip>
+        </MudTd>
+        <MudTd DataLabel="Connected">
+            @if (context.IsConnected)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+            }
+            else
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Cancel" Color="Color.Error" Size="Size.Small" />
+            }
+        </MudTd>
+        <MudTd DataLabel="Firmware">@(context.FirmwareVersion ?? "-")</MudTd>
+        <MudTd DataLabel="Connectors">@context.ConnectorCount</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" 
+                           OnClick="@(() => Navigation.NavigateTo($"/stations/{context.Id}"))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                           OnClick="@(() => Navigation.NavigateTo($"/stations/{context.Id}/edit"))" />
+            <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" 
+                           OnClick="@(() => Navigation.NavigateTo($"/stations/{context.Id}/actions"))"
+                           Disabled="@(!context.IsConnected)" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                           OnClick="@(() => ConfirmDeleteAsync(context))" />
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No stations found.</MudText>
+    </NoRecordsContent>
+    <LoadingContent>
+        <MudText>Loading...</MudText>
+    </LoadingContent>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private MudTable<StationViewModel>? _table;
+    private bool _loading;
+    private string? _error;
+    private string? _searchText;
+    private string? _filterLocation;
+    private string? _filterStatus;
+    private List<LocationViewModel> _locations = [];
+    private CancellationTokenSource? _cts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLocationsAsync();
+    }
+
+    private async Task LoadLocationsAsync()
+    {
+        var result = await LocationService.GetAllLocationsAsync();
+        if (result.IsSuccess && result.Data is not null)
+        {
+            _locations = result.Data;
+        }
+    }
+
+    private async Task<TableData<StationViewModel>> LoadStationsAsync(TableState state, CancellationToken ct)
+    {
+        _cts?.Cancel();
+        _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+
+        try
+        {
+            _loading = true;
+            _error = null;
+
+            var paging = new PagingRequest
+            {
+                Page = state.Page + 1,
+                PageSize = state.PageSize,
+                Search = _searchText,
+                SortBy = state.SortLabel,
+                SortDescending = state.SortDirection == SortDirection.Descending
+            };
+
+            var filter = new StationFilter
+            {
+                LocationId = _filterLocation,
+                Status = _filterStatus
+            };
+
+            var result = await StationService.GetStationsAsync(paging, filter, _cts.Token);
+
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return new TableData<StationViewModel>
+                {
+                    Items = result.Data.Items,
+                    TotalItems = result.Data.TotalCount
+                };
+            }
+            else
+            {
+                _error = result.Error ?? "Failed to load stations";
+                return new TableData<StationViewModel> { Items = [], TotalItems = 0 };
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return new TableData<StationViewModel> { Items = [], TotalItems = 0 };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading stations");
+            _error = "Failed to load stations";
+            return new TableData<StationViewModel> { Items = [], TotalItems = 0 };
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnSearchChanged()
+    {
+        if (_table is not null)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        if (_table is not null)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task ConfirmDeleteAsync(StationViewModel station)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to delete station '{station.ChargePointId}'?" },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Station", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            var deleteResult = await StationService.DeleteStationAsync(station.Id);
+            if (deleteResult.IsSuccess)
+            {
+                Snackbar.Add("Station deleted successfully", Severity.Success);
+                await _table!.ReloadServerData();
+            }
+            else
+            {
+                Snackbar.Add(deleteResult.Error ?? "Failed to delete station", Severity.Error);
+            }
+        }
+    }
+
+    private static Color GetStatusColor(string? status) => status?.ToLower() switch
+    {
+        "available" => Color.Success,
+        "charging" => Color.Primary,
+        "faulted" => Color.Error,
+        "unavailable" => Color.Default,
+        "reserved" => Color.Warning,
+        _ => Color.Default
+    };
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}

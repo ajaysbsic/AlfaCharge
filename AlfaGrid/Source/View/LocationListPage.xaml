@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AlfaGrid.Source.View.LocationListPage"
+             xmlns:viewModel="clr-namespace:AlfaGrid.Source.ViewModel"
+             xmlns:models="clr-namespace:AlfaGrid.Source.Models"
+             xmlns:controls="clr-namespace:AlfaGrid.Source.Controls"
+             x:DataType="viewModel:LocationListPageViewModel"
+             xmlns:handlers="clr-namespace:AlfaGrid.Source.Handler"
+             Title="Charging Locations"
+             Shell.NavBarIsVisible="True">
+    
+    <Grid RowDefinitions="Auto,*" Padding="0">
+        
+        <!-- Search Bar at Top -->
+        <Border StrokeShape="RoundRectangle 10"
+                BackgroundColor="White"
+                HeightRequest="45"
+                Margin="16,8"
+                Grid.Row="0">
+            <Grid ColumnDefinitions="Auto,*,Auto" VerticalOptions="Center">
+                <Image Source="search_icon.png"
+                       HeightRequest="20"
+                       WidthRequest="20"
+                       Margin="12,0,8,0"
+                       Grid.Column="0"/>
+                <handlers:BorderlessEntry Placeholder="Search locations..."
+                                          Text="{Binding SearchText}"
+                                          FontSize="16"
+                                          TextColor="Black"
+                                          BackgroundColor="Transparent"
+                                          VerticalOptions="Center"
+                                          Grid.Column="1" />
+                <Image Source="filter_icon.png"
+                       HeightRequest="20"
+                       WidthRequest="20"
+                       Margin="8,0,12,0"
+                       Grid.Column="2"/>
+            </Grid>
+        </Border>
+
+        <!-- Charging Locations List -->
+        <RefreshView Grid.Row="1"
+                     IsRefreshing="{Binding IsRefreshing}"
+                     Command="{Binding RefreshCommand}">
+            <CollectionView ItemsSource="{Binding ChargingLocations}"
+                           SelectionMode="None"
+                           EmptyView="No charging locations found">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Vertical" ItemSpacing="0"/>
+                </CollectionView.ItemsLayout>
+                
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ChargingLocation">
+                        <Grid>
+                            <controls:ChargingLocationCard />
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnLocationTapped"/>
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.Row="1"
+                          IsRunning="{Binding IsBusy}"
+                          IsVisible="{Binding IsBusy}"
+                          Color="{StaticResource Primary}"
+                          HorizontalOptions="Center"
+                          VerticalOptions="Center"/>
+        
+    </Grid>
+    
+</ContentPage>

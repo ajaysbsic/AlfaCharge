@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:AlfaGrid.Source.Models"
+             x:Class="AlfaGrid.Source.Controls.ChargingLocationCard"
+             x:DataType="models:ChargingLocation">
+
+    <Border StrokeShape="RoundRectangle 12" 
+            Padding="16" 
+            BackgroundColor="White"
+            Margin="8">
+        <Grid RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="8">
+
+            <!-- Location Name -->
+            <Label Text="{Binding Name}" 
+                   FontAttributes="Bold" 
+                   FontSize="16"
+                   LineBreakMode="TailTruncation"
+                   MaxLines="1"
+                   Grid.Row="0"/>
+
+            <!-- Address -->
+            <Label Text="{Binding Address}" 
+                   FontSize="12" 
+                   TextColor="#888" 
+                   LineBreakMode="TailTruncation"
+                   MaxLines="2"
+                   Grid.Row="1"/>
+
+            <!-- Availability Status -->
+            <Label Text="{Binding AvailabilityStatus}" 
+                   TextColor="#007AFF" 
+                   FontSize="14"
+                   Grid.Row="2"/>
+
+            <!-- Connector Groups -->
+            <CollectionView Grid.Row="3" 
+                           ItemsSource="{Binding ConnectorGroups}"
+                           HeightRequest="120"
+                           SelectionMode="None"
+                           InputTransparent="True">
+                <CollectionView.ItemsLayout>
+                    <LinearItemsLayout Orientation="Horizontal" ItemSpacing="20"/>
+                </CollectionView.ItemsLayout>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ConnectorGroup">
+                        <VerticalStackLayout Spacing="4" HorizontalOptions="Center">
+
+                            <!-- Connector Image -->
+                            <Image Source="{Binding ImageSource}" 
+                                   HeightRequest="64" 
+                                   WidthRequest="64"
+                                   Aspect="AspectFit"
+                                   HorizontalOptions="Center"
+                                   InputTransparent="True"
+                                   IsAnimationPlaying="False"/>
+
+                            <!-- Power Rating -->
+                            <Label Text="{Binding PowerRatingText}" 
+                                   FontSize="12" 
+                                   FontAttributes="Bold"
+                                   HorizontalTextAlignment="Center"
+                                   VerticalOptions="Center"
+                                   InputTransparent="True"/>
+
+                            <!-- Availability Text -->
+                            <Label Text="{Binding AvailabilityText}" 
+                                   FontSize="11" 
+                                   TextColor="#666"
+                                   HorizontalTextAlignment="Center"
+                                   InputTransparent="True"/>
+
+                        </VerticalStackLayout>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+        </Grid>
+    </Border>
+</ContentView>

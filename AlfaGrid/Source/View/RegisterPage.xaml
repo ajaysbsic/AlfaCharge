@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AlfaGrid.Source.View.RegisterPage"
+             xmlns:viewModel="clr-namespace:AlfaGrid.Source.ViewModel"
+             x:DataType="viewModel:RegisterViewModel"
+			 xmlns:converters="clr-namespace:AlfaGrid.Source.Converters"
+             xmlns:handlers="clr-namespace:AlfaGrid.Source.Handler"
+             xmlns:controls="clr-namespace:AlfaGrid.Source.Controls"
+             Shell.NavBarIsVisible="False"
+			 BackgroundColor="{DynamicResource PageBackgroundColor}">
+    <ContentPage.Resources>
+        <converters:TranslateExtension x:Key="T" />
+    </ContentPage.Resources>
+    <Grid>
+        <!-- Back Button (Top-Left) -->
+        <ImageButton Source="arrow_left.png"
+                     HeightRequest="24"
+                     WidthRequest="24"
+                     BackgroundColor="Transparent"
+                     Margin="16,40,0,0"
+                     HorizontalOptions="Start"
+                     VerticalOptions="Start"
+                     Command="{Binding GoBackCommand}"/>
+        
+        <!-- Full-screen grid: header, scrollable form, sticky footer -->
+        <Grid RowDefinitions="Auto,*,Auto"
+              Padding="{OnIdiom Phone='16,8,16,8', Tablet='24,16', Desktop='48,24'}">
+
+            <!-- Header -->
+            <Label Grid.Row="0"
+                   Text="{converters:Translate Register_Title}"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center"
+                   Margin="0,4,0,8"
+                   TextColor="{DynamicResource PrimaryTextColor}"/>
+
+            <!-- Scrollable full-width form -->
+            <ScrollView Grid.Row="1">
+                <VerticalStackLayout Spacing="12">
+
+                    <!-- First Name -->
+                    <VerticalStackLayout Spacing="4">
+                        <Border
+                            HeightRequest="45"
+                            Margin="-20,0,0,0"
+                            Stroke="White"
+                            StrokeThickness="1"
+                            Background="Transparent"
+                            HorizontalOptions="Fill">
+                            <handlers:BorderlessEntry
+                                Text="{Binding Model.FirstName, Mode=TwoWay}"
+                                Placeholder="{converters:Translate Register_FullName}"
+                                TextColor="{DynamicResource PrimaryTextColor}"
+                                PlaceholderColor="{DynamicResource PlaceholderColor}"
+                                Margin="20,0,0,0"
+                                VerticalOptions="Center"
+                                ClearButtonVisibility="WhileEditing"/>
+                        </Border>
+                        <BoxView HeightRequest="1" Color="{DynamicResource DividerColor}"/>
+                        <Label Text="{Binding FirstNameError}"
+                               IsVisible="{Binding FirstNameHasError}"
+                               FontSize="12"
+                               TextColor="{DynamicResource ErrorColor}"/>
+                    </VerticalStackLayout>
+
+                    <!-- Last Name -->
+                    <VerticalStackLayout Spacing="4">
+                        <Border
+                            HeightRequest="45"
+                            Margin="-20,0,0,0"
+                            Stroke="White"
+                            StrokeThickness="1"
+                            Background="Transparent"
+                            HorizontalOptions="Fill">
+                            <handlers:BorderlessEntry
+                                Placeholder="{converters:Translate Register_FullName}"
+                                TextColor="{DynamicResource PrimaryTextColor}"
+                                PlaceholderColor="{DynamicResource PlaceholderColor}"
+                                Text="{Binding Model.LastName, Mode=TwoWay}"
+                                Margin="20,0,0,0"
+                                VerticalOptions="Center"
+                                ClearButtonVisibility="WhileEditing"/>
+                        </Border>
+                        <BoxView HeightRequest="1" Color="{DynamicResource DividerColor}"/>
+                        <Label Text="{Binding LastNameError}"
+                               IsVisible="{Binding LastNameHasError}"
+                               FontSize="12"
+                               TextColor="{DynamicResource ErrorColor}"/>
+                    </VerticalStackLayout>
+
+                    <!-- Phone with dynamic country -->
+                    <VerticalStackLayout Spacing="4">
+
+                        <Grid ColumnDefinitions="Auto,Auto,*" HeightRequest="48">
+                            <!-- Flag bound to the selected country -->
+                            <Image Source="{Binding SelectedCountry.FlagImage}"
+                                   HeightRequest="20" WidthRequest="28"
+                                   Margin="0,0,8,0" />
+
+                            <!-- Dial-code picker (shows the code; native chevron only) -->
+                            <Picker Grid.Column="1"
+                                    BackgroundColor="Transparent"
+                                    TextColor="{DynamicResource PrimaryTextColor}"
+                                    ItemsSource="{Binding Countries}"
+                                    SelectedItem="{Binding SelectedCountry, Mode=TwoWay}"
+                                    ItemDisplayBinding="{Binding DialCode}" />
+
+                            <!-- Phone number -->
+                            <Border
+                                Grid.Column="2"
+                                HeightRequest="45"
+                                Margin="-20,0,0,0"
+                                Stroke="White"
+                                StrokeThickness="1"
+                                Background="Transparent"
+                                HorizontalOptions="Fill">
+                                <handlers:BorderlessEntry
+                                    TextColor="{DynamicResource PrimaryTextColor}"
+                                    PlaceholderColor="{DynamicResource PlaceholderColor}"
+                                    Keyboard="Telephone"
+                                    Placeholder="{converters:Translate Register_Phone}"
+                                    Text="{Binding Model.LocalPhone, Mode=TwoWay}"
+                                    Margin="20,0,0,0"
+                                    VerticalOptions="Center"
+                                    ClearButtonVisibility="WhileEditing"/>
+                            </Border>
+                        </Grid>
+
+                        <!-- underline -->
+                        <BoxView HeightRequest="1" Color="{DynamicResource DividerColor}" />
+
+                        <!-- validation text -->
+                        <Label Text="{Binding PhoneError}"
+                               IsVisible="{Binding PhoneHasError}"
+                               FontSize="12"
+                               TextColor="{DynamicResource ErrorColor}" />
+                    </VerticalStackLayout>
+
+                    <!-- Email (optional) -->
+                    <VerticalStackLayout Spacing="4">
+                        <Border
+                            HeightRequest="45"
+                            Margin="-20,0,0,0"
+                            Stroke="White"
+                            StrokeThickness="1"
+                            Background="Transparent"
+                            HorizontalOptions="Fill">
+                            <handlers:BorderlessEntry
+                                TextColor="{DynamicResource PrimaryTextColor}"
+                                PlaceholderColor="{DynamicResource PlaceholderColor}"
+                                Keyboard="Email"
+                                Placeholder="{converters:Translate Register_Email}"
+                                Text="{Binding Model.Email, Mode=TwoWay}"
+                                Margin="20,0,0,0"
+                                VerticalOptions="Center"
+                                ClearButtonVisibility="WhileEditing"/>
+                        </Border>
+                        <BoxView HeightRequest="1" Color="{DynamicResource DividerColor}"/>
+                        <Label Text="{Binding EmailError}"
+                               IsVisible="{Binding EmailHasError}"
+                               FontSize="12"
+                               TextColor="{DynamicResource ErrorColor}"/>
+                    </VerticalStackLayout>
+
+                    <!-- Password -->
+                    <VerticalStackLayout Spacing="4">
+                        <Grid ColumnDefinitions="80*,20*" HeightRequest="48">
+                            <Border
+                                HeightRequest="45"
+                                Margin="-20,0,0,0"
+                                Stroke="White"
+                                StrokeThickness="1"
+                                Background="Transparent">
+                                <handlers:BorderlessEntry
+                                    TextColor="{DynamicResource PrimaryTextColor}"
+                                    PlaceholderColor="{DynamicResource PlaceholderColor}"
+                                    Placeholder="{converters:Translate Register_Password}"
+                                    IsPassword="{Binding IsPasswordHidden}"
+                                    Text="{Binding Model.Password, Mode=TwoWay}"
+                                    Margin="20,0,0,0"
+                                    VerticalOptions="Center"
+                                    ClearButtonVisibility="WhileEditing"/>
+                            </Border>
+                            <ImageButton Grid.Column="1"
+                                         Source="{Binding PasswordToggleIcon}"
+                                         BackgroundColor="Transparent"
+                                         Padding="12"
+                                         Command="{Binding TogglePasswordCommand}" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="{DynamicResource DividerColor}"/>
+                        <Label Text="{Binding PasswordError}"
+                               IsVisible="{Binding PasswordHasError}"
+                               FontSize="12"
+                               TextColor="{DynamicResource ErrorColor}"/>
+                    </VerticalStackLayout>
+
+                    <!-- Confirm Password -->
+                    <VerticalStackLayout Spacing="4">
+                        <Grid ColumnDefinitions="80*,20*" HeightRequest="48">
+                            <Border
+                                HeightRequest="45"
+                                Margin="-20,0,0,0"
+                                Stroke="White"
+                                StrokeThickness="1"
+                                Background="Transparent"
+                                HorizontalOptions="Fill">
+                                <handlers:BorderlessEntry
+                                    TextColor="{DynamicResource PrimaryTextColor}"
+                                    PlaceholderColor="{DynamicResource PlaceholderColor}"
+                                    Placeholder="{converters:Translate Register_ConfirmPassword}"
+                                    IsPassword="{Binding IsConfirmHidden}"
+                                    Text="{Binding Model.ConfirmPassword, Mode=TwoWay}"
+                                    Margin="20,0,0,0"
+                                    VerticalOptions="Center"
+                                    ClearButtonVisibility="WhileEditing"/>
+                            </Border>
+                            <ImageButton Grid.Column="1"
+                                         Source="{Binding ConfirmToggleIcon}"
+                                         BackgroundColor="Transparent"
+                                         Padding="12"
+                                         Command="{Binding ToggleConfirmCommand}" />
+                        </Grid>
+                        <BoxView HeightRequest="1" Color="{DynamicResource DividerColor}"/>
+                        <Label Text="{Binding ConfirmError}"
+                               IsVisible="{Binding ConfirmHasError}"
+                               FontSize="12"
+                               TextColor="{DynamicResource ErrorColor}"/>
+                    </VerticalStackLayout>
+
+                    <!-- Extra spacer so keyboard doesn't cover last errors -->
+                    <BoxView HeightRequest="8" Opacity="0"/>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <!-- Sticky footer (full-width like login) -->
+            <VerticalStackLayout Grid.Row="2" Spacing="8">
+                <Button
+                    Style="{StaticResource PrimaryCtaButton}"
+                    Text="{converters:Translate Register_Button}"
+                    Command="{Binding RegisterCommand}"
+                    FontSize="16"
+                    TextColor="White"
+                    BackgroundColor="{DynamicResource PrimaryColor}"
+                    IsEnabled="{Binding CanRegister}">
+                </Button>
+
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="4" Margin="0,0,0,4">
+                    <Label Text="Privacy Policy" TextColor="{DynamicResource LinkColor}">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenPrivacyAsyncCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label Text=" and " />
+                    <Label Text="Terms &amp; Conditions" TextColor="{DynamicResource LinkColor}">
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenTermsAsyncCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- Loading Overlay -->
+        <controls:LoadingOverlay IsVisible="{Binding IsBusy}" 
+                                LoadingText="{converters:Translate Loading}"/>
+    </Grid>
+</ContentPage>

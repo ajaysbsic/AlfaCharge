@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AlfaGrid.Source.View.LoginPage"
+             Shell.NavBarIsVisible="False"
+             xmlns:handlers="clr-namespace:AlfaGrid.Source.Handler"
+             xmlns:viewModel="clr-namespace:AlfaGrid.Source.ViewModel"
+             xmlns:controls="clr-namespace:AlfaGrid.Source.Controls"
+             xmlns:local="clr-namespace:AlfaGrid.Source.Converters"
+             x:DataType="viewModel:LoginPageViewModel">
+
+    <Grid>
+        <!-- Language Selector - Top Right Corner -->
+        <Border HorizontalOptions="End"
+                VerticalOptions="Start"
+                Margin="20,40,20,0"
+                BackgroundColor="#F5F7FB"
+                StrokeThickness="0"
+                Padding="12,8"
+                HeightRequest="40">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="20"/>
+            </Border.StrokeShape>
+            <HorizontalStackLayout Spacing="8">
+                <Image Source="language_icon.png"
+                       HeightRequest="20"
+                       WidthRequest="20"
+                       VerticalOptions="Center"/>
+                <Label Text="{Binding SelectedLanguageDisplay}"
+                       FontSize="14"
+                       TextColor="#0E2A47"
+                       VerticalOptions="Center"
+                       FontAttributes="Bold"/>
+            </HorizontalStackLayout>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding SelectLanguageCommand}"/>
+            </Border.GestureRecognizers>
+        </Border>
+
+        <VerticalStackLayout 
+                Spacing="25" 
+                Padding="30,0" 
+                VerticalOptions="Center">
+
+            <Image Source="alfanar.png" HeightRequest="150" WidthRequest="150" />
+
+            <VerticalStackLayout Spacing="5">
+                <Label Text="{local:Translate Login_Title}" 
+                       FontSize="28" 
+                       TextColor="Gray" 
+                       HorizontalTextAlignment="Center" />
+                <Label Text="{local:Translate Login_Subtitle}" 
+                       FontSize="18" 
+                       TextColor="Gray" 
+                       HorizontalTextAlignment="Center" />
+            </VerticalStackLayout>
+
+            <StackLayout Orientation="Horizontal">
+                <Border
+                ZIndex="1"
+                Stroke="White"
+                StrokeThickness="1"
+                HeightRequest="56"
+                WidthRequest="56"
+                Background="Transparent"
+                HorizontalOptions="Start"
+                VerticalOptions="Start"
+                StrokeShape="RoundRectangle 28">
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.3" Offset="0,4" Radius="8" />
+                    </Border.Shadow>
+                    <Image Source="user.png" HeightRequest="20" WidthRequest="20" />
+                </Border>
+                <Border
+                    HeightRequest="45"
+                    Margin="-20,0,0,0"
+                    Stroke="White"
+                    StrokeThickness="1"
+                    Background="Transparent"
+                    HorizontalOptions="Fill">
+                    <handlers:BorderlessEntry
+                        Text="{Binding Email}"
+                        Margin="20,0,0,0"
+                        VerticalOptions="Center"
+                        Placeholder="{local:Translate Login_Email}"
+                        Keyboard="Email" />
+                </Border>
+
+            </StackLayout>
+
+            <StackLayout Orientation="Horizontal">
+                <Border
+                    ZIndex="1"
+                    Stroke="White"
+                    StrokeThickness="1"
+                    HeightRequest="56"
+                    WidthRequest="56"
+                    Background="Transparent"
+                    HorizontalOptions="Start"
+                    VerticalOptions="Start"
+                    StrokeShape="RoundRectangle 28">
+
+                    <Border.Shadow>
+                        <Shadow Brush="Black" Opacity="0.3" Offset="0,4" Radius="8" />
+                    </Border.Shadow>
+                    <Image Source="lock.png" HeightRequest="20" WidthRequest="20" />
+                </Border>
+                <Border
+                    HeightRequest="45"
+                    Margin="-20,0,0,0"
+                    Stroke="White"
+                    StrokeThickness="1"
+                    Background="Transparent"
+                    HorizontalOptions="Fill">
+                    <handlers:BorderlessEntry
+                        Text="{Binding Password}"
+                        Margin="20,0,0,0"
+                        VerticalOptions="Center"
+                        Placeholder="{local:Translate Login_Password}"
+                        IsPassword="True" />
+                </Border>
+            </StackLayout>
+
+            <Button Text="{local:Translate Login_Button}" 
+                    WidthRequest="100" 
+                    CornerRadius="20" 
+                    HorizontalOptions="Center" 
+                    Command="{Binding LoginCommand}" />
+
+            <StackLayout Orientation="Horizontal" Spacing="5" HorizontalOptions="Center">
+                <Label Text="{local:Translate Login_NoAccount}" TextColor="Gray" />
+                <Label Text="{local:Translate Login_SignUp}" TextColor="#0A6CF1">
+                    <Label.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateToRegisterCommand}" NumberOfTapsRequired="1" />
+                    </Label.GestureRecognizers>
+                </Label>
+            </StackLayout>
+        </VerticalStackLayout>
+
+        <!-- Loading Overlay -->
+        <controls:LoadingOverlay IsVisible="{Binding IsBusy}" 
+                                LoadingText="{local:Translate Loading}"/>
+    </Grid>
+</ContentPage>

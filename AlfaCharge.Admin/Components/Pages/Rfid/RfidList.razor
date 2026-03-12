@@ -1,0 +1,192 @@
+@page "/rfid"
+@rendermode InteractiveServer
+@inject RfidService RfidService
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject ILogger<RfidList> Logger
+
+<PageTitle>RFID Cards - AlfaCharge Admin</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">RFID Cards</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudTextField @bind-Value="_searchText" 
+                          Label="Search by ID Tag" 
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.End" 
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          DebounceInterval="400"
+                          OnDebounceIntervalElapsed="OnSearchChanged" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" 
+                       OnClick="@(() => Navigation.NavigateTo("/rfid/new"))" Class="mt-2">
+                Add RFID Card
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _error = null">
+        @_error
+    </MudAlert>
+}
+
+<MudTable ServerData="LoadRfidCardsAsync" 
+          @ref="_table"
+          Dense="true" 
+          Hover="true" 
+          Bordered="true"
+          Striped="true"
+          Loading="_loading">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="idtag" T="RfidCardViewModel">ID Tag</MudTableSortLabel></MudTh>
+        <MudTh>User</MudTh>
+        <MudTh><MudTableSortLabel SortLabel="status" T="RfidCardViewModel">Status</MudTableSortLabel></MudTh>
+        <MudTh>Expiry Date</MudTh>
+        <MudTh><MudTableSortLabel SortLabel="lastused" T="RfidCardViewModel">Last Used</MudTableSortLabel></MudTh>
+        <MudTh>Last Station</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="ID Tag"><code>@context.IdTag</code></MudTd>
+        <MudTd DataLabel="User">@(context.UserName ?? "-")</MudTd>
+        <MudTd DataLabel="Status">
+            <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip>
+        </MudTd>
+        <MudTd DataLabel="Expiry Date">@(context.ExpiryDate?.ToString("d") ?? "No expiry")</MudTd>
+        <MudTd DataLabel="Last Used">@(context.LastUsed?.ToString("g") ?? "Never")</MudTd>
+        <MudTd DataLabel="Last Station">@(context.LastUsedStation ?? "-")</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                           OnClick="@(() => Navigation.NavigateTo($"/rfid/{context.Id}/edit"))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                           OnClick="@(() => ConfirmDeleteAsync(context))" />
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No RFID cards found.</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private MudTable<RfidCardViewModel>? _table;
+    private bool _loading;
+    private string? _error;
+    private string? _searchText;
+    private CancellationTokenSource? _cts;
+
+    private async Task<TableData<RfidCardViewModel>> LoadRfidCardsAsync(TableState state, CancellationToken ct)
+    {
+        _cts?.Cancel();
+        _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+
+        try
+        {
+            _loading = true;
+            _error = null;
+
+            var paging = new PagingRequest
+            {
+                Page = state.Page + 1,
+                PageSize = state.PageSize,
+                Search = _searchText,
+                SortBy = state.SortLabel,
+                SortDescending = state.SortDirection == SortDirection.Descending
+            };
+
+            var result = await RfidService.GetRfidCardsAsync(paging, _cts.Token);
+
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return new TableData<RfidCardViewModel>
+                {
+                    Items = result.Data.Items,
+                    TotalItems = result.Data.TotalCount
+                };
+            }
+            else
+            {
+                _error = result.Error ?? "Failed to load RFID cards";
+                return new TableData<RfidCardViewModel> { Items = [], TotalItems = 0 };
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return new TableData<RfidCardViewModel> { Items = [], TotalItems = 0 };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading RFID cards");
+            _error = "Failed to load RFID cards";
+            return new TableData<RfidCardViewModel> { Items = [], TotalItems = 0 };
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnSearchChanged()
+    {
+        if (_table is not null)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task ConfirmDeleteAsync(RfidCardViewModel card)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to delete RFID card '{card.IdTag}'?" },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete RFID Card", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            var deleteResult = await RfidService.DeleteRfidCardAsync(card.Id);
+            if (deleteResult.IsSuccess)
+            {
+                Snackbar.Add("RFID card deleted successfully", Severity.Success);
+                await _table!.ReloadServerData();
+            }
+            else
+            {
+                Snackbar.Add(deleteResult.Error ?? "Failed to delete RFID card", Severity.Error);
+            }
+        }
+    }
+
+    private static Color GetStatusColor(string status) => status.ToLower() switch
+    {
+        "active" => Color.Success,
+        "blocked" => Color.Error,
+        "expired" => Color.Warning,
+        _ => Color.Default
+    };
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}

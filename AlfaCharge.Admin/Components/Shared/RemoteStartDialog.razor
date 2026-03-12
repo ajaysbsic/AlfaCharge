@@ -1,0 +1,33 @@
+@using MudBlazor
+@using AlfaCharge.Admin.Models
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="_request.IdTag" 
+                      Label="ID Tag" 
+                      Required="true"
+                      Variant="Variant.Outlined"
+                      Class="mb-4" />
+        <MudNumericField @bind-Value="_request.ConnectorId" 
+                         Label="Connector ID" 
+                         Min="1"
+                         Variant="Variant.Outlined" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" 
+                   Disabled="@(string.IsNullOrWhiteSpace(_request.IdTag))">
+            Start
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance? MudDialog { get; set; }
+
+    private RemoteStartRequest _request = new() { ConnectorId = 1 };
+
+    private void Submit() => MudDialog?.Close(DialogResult.Ok(_request));
+    private void Cancel() => MudDialog?.Cancel();
+}

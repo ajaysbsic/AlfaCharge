@@ -1,0 +1,97 @@
+@using MudBlazor
+@using AlfaCharge.Admin.Models
+@using System.Text.Json
+@inject IJSRuntime JS
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudField Label="Timestamp" Variant="Variant.Outlined">@Log.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")</MudField>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudField Label="Charge Point ID" Variant="Variant.Outlined">@Log.ChargePointId</MudField>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudField Label="Direction" Variant="Variant.Outlined">
+                    @(Log.Direction == "inbound" ? "CS ? CSMS" : "CSMS ? CS")
+                </MudField>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudField Label="Action" Variant="Variant.Outlined">@(Log.Action ?? "-")</MudField>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudField Label="Message ID" Variant="Variant.Outlined">@(Log.MessageId ?? "-")</MudField>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudField Label="Message Type" Variant="Variant.Outlined">@GetMessageType(Log.MessageTypeId)</MudField>
+            </MudItem>
+            @if (!string.IsNullOrEmpty(Log.ResultCode))
+            {
+                <MudItem xs="12">
+                    <MudField Label="Result Code" Variant="Variant.Outlined">@Log.ResultCode</MudField>
+                </MudItem>
+            }
+        </MudGrid>
+
+        <MudDivider Class="my-4" />
+
+        <div class="d-flex justify-space-between align-center mb-2">
+            <MudText Typo="Typo.h6">Payload</MudText>
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ContentCopy" 
+                       OnClick="CopyPayload" Size="Size.Small">
+                Copy
+            </MudButton>
+        </div>
+
+        <MudPaper Class="pa-4" Style="background-color: #1e1e1e; overflow-x: auto; max-height: 400px;">
+            <pre style="margin: 0; color: #d4d4d4; white-space: pre-wrap; font-family: 'Consolas', monospace; font-size: 13px;">@_formattedPayload</pre>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private MudDialogInstance? MudDialog { get; set; }
+
+    [Parameter]
+    public OcppLogViewModel Log { get; set; } = new();
+
+    private string _formattedPayload = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        _formattedPayload = FormatJson(Log.PayloadJson);
+    }
+
+    private static string FormatJson(string json)
+    {
+        try
+        {
+            var doc = JsonDocument.Parse(json);
+            return JsonSerializer.Serialize(doc, new JsonSerializerOptions { WriteIndented = true });
+        }
+        catch
+        {
+            return json;
+        }
+    }
+
+    private static string GetMessageType(int messageTypeId) => messageTypeId switch
+    {
+        2 => "CALL (Request)",
+        3 => "CALLRESULT (Response)",
+        4 => "CALLERROR (Error)",
+        _ => $"Unknown ({messageTypeId})"
+    };
+
+    private async Task CopyPayload()
+    {
+        await JS.InvokeVoidAsync("navigator.clipboard.writeText", Log.PayloadJson);
+    }
+
+    private void Close() => MudDialog?.Close();
+}

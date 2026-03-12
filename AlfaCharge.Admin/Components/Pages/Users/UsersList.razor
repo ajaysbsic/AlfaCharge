@@ -1,0 +1,245 @@
+@page "/users"
+@rendermode InteractiveServer
+@inject UserService UserService
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject ILogger<UsersList> Logger
+
+<PageTitle>Users - AlfaCharge Admin</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Users</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudTextField @bind-Value="_searchText" 
+                          Label="Search" 
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.End" 
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          DebounceInterval="400"
+                          OnDebounceIntervalElapsed="OnSearchChanged" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" 
+                       OnClick="@(() => Navigation.NavigateTo("/users/new"))" Class="mt-2">
+                Add User
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _error = null">
+        @_error
+    </MudAlert>
+}
+
+<MudTable ServerData="LoadUsersAsync" 
+          @ref="_table"
+          Dense="true" 
+          Hover="true" 
+          Bordered="true"
+          Striped="true"
+          Loading="_loading">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="name" T="UserViewModel">Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="email" T="UserViewModel">Email</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="role" T="UserViewModel">Role</MudTableSortLabel></MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Created</MudTh>
+        <MudTh>Last Login</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Name">@context.Name</MudTd>
+        <MudTd DataLabel="Email">@context.Email</MudTd>
+        <MudTd DataLabel="Role">
+            <MudChip T="string" Color="@GetRoleColor(context.Role)" Size="Size.Small">@context.Role</MudChip>
+        </MudTd>
+        <MudTd DataLabel="Status">
+            @if (context.IsLocked)
+            {
+                <MudChip T="string" Color="Color.Error" Size="Size.Small" Icon="@Icons.Material.Filled.Lock">Locked</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.Check">Active</MudChip>
+            }
+        </MudTd>
+        <MudTd DataLabel="Created">@(context.CreatedAt?.ToString("d") ?? "-")</MudTd>
+        <MudTd DataLabel="Last Login">@(context.LastLogin?.ToString("g") ?? "Never")</MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                           OnClick="@(() => Navigation.NavigateTo($"/users/{context.Id}/edit"))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Password" Size="Size.Small" 
+                           OnClick="@(() => ShowResetPasswordDialog(context))" />
+            <MudIconButton Icon="@(context.IsLocked ? Icons.Material.Filled.LockOpen : Icons.Material.Filled.Lock)" 
+                           Size="Size.Small" 
+                           OnClick="@(() => ToggleLockAsync(context))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                           OnClick="@(() => ConfirmDeleteAsync(context))" />
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No users found.</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private MudTable<UserViewModel>? _table;
+    private bool _loading;
+    private string? _error;
+    private string? _searchText;
+    private CancellationTokenSource? _cts;
+
+    private async Task<TableData<UserViewModel>> LoadUsersAsync(TableState state, CancellationToken ct)
+    {
+        _cts?.Cancel();
+        _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+
+        try
+        {
+            _loading = true;
+            _error = null;
+
+            var paging = new PagingRequest
+            {
+                Page = state.Page + 1,
+                PageSize = state.PageSize,
+                Search = _searchText,
+                SortBy = state.SortLabel,
+                SortDescending = state.SortDirection == SortDirection.Descending
+            };
+
+            var result = await UserService.GetUsersAsync(paging, _cts.Token);
+
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return new TableData<UserViewModel>
+                {
+                    Items = result.Data.Items,
+                    TotalItems = result.Data.TotalCount
+                };
+            }
+            else
+            {
+                _error = result.Error ?? "Failed to load users";
+                return new TableData<UserViewModel> { Items = [], TotalItems = 0 };
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return new TableData<UserViewModel> { Items = [], TotalItems = 0 };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading users");
+            _error = "Failed to load users";
+            return new TableData<UserViewModel> { Items = [], TotalItems = 0 };
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnSearchChanged()
+    {
+        if (_table is not null)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task ShowResetPasswordDialog(UserViewModel user)
+    {
+        var parameters = new DialogParameters<ResetPasswordDialog>
+        {
+            { x => x.UserName, user.Name }
+        };
+
+        var dialog = await DialogService.ShowAsync<ResetPasswordDialog>("Reset Password", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled && result.Data is string newPassword)
+        {
+            var resetResult = await UserService.ResetPasswordAsync(Guid.Parse(user.Id), newPassword);
+            if (resetResult.IsSuccess)
+            {
+                Snackbar.Add("Password reset successfully", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(resetResult.Error ?? "Failed to reset password", Severity.Error);
+            }
+        }
+    }
+
+    private async Task ToggleLockAsync(UserViewModel user)
+    {
+        var newState = !user.IsLocked;
+        var result = await UserService.SetLockedAsync(Guid.Parse(user.Id), newState);
+        
+        if (result.IsSuccess)
+        {
+            Snackbar.Add($"User {(newState ? "locked" : "unlocked")} successfully", Severity.Success);
+            await _table!.ReloadServerData();
+        }
+        else
+        {
+            Snackbar.Add(result.Error ?? "Failed to update user", Severity.Error);
+        }
+    }
+
+    private async Task ConfirmDeleteAsync(UserViewModel user)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to delete user '{user.Name}'?" },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete User", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            var deleteResult = await UserService.DeleteUserAsync(Guid.Parse(user.Id));
+            if (deleteResult.IsSuccess)
+            {
+                Snackbar.Add("User deleted successfully", Severity.Success);
+                await _table!.ReloadServerData();
+            }
+            else
+            {
+                Snackbar.Add(deleteResult.Error ?? "Failed to delete user", Severity.Error);
+            }
+        }
+    }
+
+    private static Color GetRoleColor(string role) => role.ToLower() switch
+    {
+        "admin" => Color.Error,
+        "cpo" => Color.Primary,
+        _ => Color.Default
+    };
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}

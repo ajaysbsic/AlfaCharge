@@ -1,0 +1,37 @@
+﻿<MudNavMenu>
+    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
+        Dashboard
+    </MudNavLink>
+
+    <MudNavGroup Title="Operations" Icon="@Icons.Material.Filled.EvStation" Expanded="true">
+        <MudNavLink Href="/stations" Icon="@Icons.Material.Filled.Bolt">
+            Stations
+        </MudNavLink>
+        <MudNavLink Href="/locations" Icon="@Icons.Material.Filled.LocationOn">
+            Locations
+        </MudNavLink>
+        <MudNavLink Href="/sessions" Icon="@Icons.Material.Filled.PlayCircle">
+            Live Sessions
+        </MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="Management" Icon="@Icons.Material.Filled.ManageAccounts" Expanded="true">
+        <MudNavLink Href="/users" Icon="@Icons.Material.Filled.People">
+            Users
+        </MudNavLink>
+        <MudNavLink Href="/rfid" Icon="@Icons.Material.Filled.CreditCard">
+            RFID Cards
+        </MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="Monitoring" Icon="@Icons.Material.Filled.Analytics" Expanded="false">
+        <MudNavLink Href="/ocpp-logs" Icon="@Icons.Material.Filled.Article">
+            OCPP Logs
+        </MudNavLink>
+    </MudNavGroup>
+
+    <MudNavLink Href="/settings" Icon="@Icons.Material.Filled.Settings">
+        Settings
+    </MudNavLink>
+</MudNavMenu>
+

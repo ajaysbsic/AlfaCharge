@@ -1,0 +1,234 @@
+@page "/users/new"
+@page "/users/{Id:guid}/edit"
+@rendermode InteractiveServer
+@inject UserService UserService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject ILogger<UserEdit> Logger
+
+<PageTitle>@(_isNew ? "New User" : "Edit User") - AlfaCharge Admin</PageTitle>
+
+<MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">@(_isNew ? "Create New User" : "Edit User")</MudText>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <EditForm Model="_model" OnValidSubmit="SaveAsync">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.Name" 
+                                  Label="Name" 
+                                  Required="true"
+                                  RequiredError="Name is required"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.Email" 
+                                  Label="Email" 
+                                  Required="true"
+                                  RequiredError="Email is required"
+                                  InputType="InputType.Email"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                @if (_isNew)
+                {
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_password" 
+                                      Label="Password" 
+                                      Required="true"
+                                      RequiredError="Password is required"
+                                      InputType="InputType.Password"
+                                      Variant="Variant.Outlined" />
+                    </MudItem>
+                }
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_model.Role" 
+                               Label="Role" 
+                               Required="true"
+                               Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("Admin")">Admin</MudSelectItem>
+                        <MudSelectItem Value="@("CPO")">CPO</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_model.AssignedLocationIds" 
+                                  Label="Assigned Location IDs (comma-separated)" 
+                                  HelperText="For CPO users - comma-separated list of location IDs they can access"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-4" />
+
+            <div class="d-flex gap-2">
+                <MudButton ButtonType="ButtonType.Submit" 
+                           Variant="Variant.Filled" 
+                           Color="Color.Primary"
+                           Disabled="_saving">
+                    @if (_saving)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    }
+                    @(_isNew ? "Create" : "Save")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4">@_error</MudAlert>
+            }
+        </EditForm>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public Guid? Id { get; set; }
+
+    private bool _isNew => Id is null;
+    private bool _loading = true;
+    private bool _saving;
+    private string? _error;
+    private string? _password;
+    private UserFormModel _model = new();
+    private List<BreadcrumbItem> _breadcrumbs = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbs =
+        [
+            new BreadcrumbItem("Users", "/users"),
+            new BreadcrumbItem(_isNew ? "New" : "Edit", null, disabled: true)
+        ];
+
+        if (!_isNew)
+        {
+            await LoadUserAsync();
+        }
+        else
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadUserAsync()
+    {
+        try
+        {
+            var result = await UserService.GetUserAsync(Id!.Value);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                var user = result.Data;
+                _model = new UserFormModel
+                {
+                    Name = user.Name,
+                    Email = user.Email,
+                    Role = user.Role
+                };
+                _breadcrumbs[1] = new BreadcrumbItem($"Edit: {user.Name}", null, disabled: true);
+            }
+            else
+            {
+                _error = "User not found";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading user {Id}", Id);
+            _error = "Failed to load user";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _error = null;
+
+        try
+        {
+            if (_isNew)
+            {
+                if (string.IsNullOrWhiteSpace(_password))
+                {
+                    _error = "Password is required";
+                    return;
+                }
+
+                var createModel = new UserCreateModel
+                {
+                    Name = _model.Name,
+                    Email = _model.Email,
+                    Password = _password,
+                    Role = _model.Role,
+                    AssignedLocationIds = _model.AssignedLocationIds
+                };
+
+                var result = await UserService.CreateUserAsync(createModel);
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("User created successfully", Severity.Success);
+                    Navigation.NavigateTo("/users");
+                }
+                else
+                {
+                    _error = result.Error ?? "Failed to create user";
+                }
+            }
+            else
+            {
+                var updateModel = new UserUpdateModel
+                {
+                    Name = _model.Name,
+                    Email = _model.Email,
+                    Role = _model.Role,
+                    AssignedLocationIds = _model.AssignedLocationIds
+                };
+
+                var result = await UserService.UpdateUserAsync(Id!.Value, updateModel);
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("User updated successfully", Severity.Success);
+                    Navigation.NavigateTo("/users");
+                }
+                else
+                {
+                    _error = result.Error ?? "Failed to update user";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error saving user");
+            _error = "An unexpected error occurred";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/users");
+    }
+
+    private class UserFormModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Role { get; set; } = "CPO";
+        public string? AssignedLocationIds { get; set; }
+    }
+}

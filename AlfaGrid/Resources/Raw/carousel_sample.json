@@ -1,0 +1,16 @@
+[
+  {
+    "Title": "Alfanar Industrial City",
+    "Address": "New Al Kharj Road Second Industrial City",
+    "Status": "Open 24hrs",
+    "Charger1": "1/8 Available (22kW)",
+    "Charger2": "2/4 Available (120kW)"
+  },
+  {
+    "Title": "Downtown Mall",
+    "Address": "Main Street",
+    "Status": "Open 10am - 10pm",
+    "Charger1": "0/4 Available (22kW)",
+    "Charger2": "1/2 Available (150kW)"
+  }
+]

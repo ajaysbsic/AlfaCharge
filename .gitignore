@@ -1,0 +1,59 @@
+# Build output
+bin/
+obj/
+
+# User-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+*.snupkg
+packages/
+
+# Logs and diagnostics
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test / coverage artifacts
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+
+# Dotnet local tools / artifacts
+artifacts/
+
+# MAUI / Android intermediate files
+*.apk
+*.aab
+*.apks
+*.idsig
+*.keystore
+*.jks
+
+# Environment files
+.env
+.env.*
+
+# Generated local db/cache
+*.db
+*.db-shm
+*.db-wal
+
+# Node modules (if added for tooling)
+node_modules/

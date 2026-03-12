@@ -1,0 +1,193 @@
+@page "/stations/{Id:guid}"
+@rendermode InteractiveServer
+@inject StationService StationService
+@inject NavigationManager Navigation
+@inject ILogger<StationDetail> Logger
+
+<PageTitle>Station Details - AlfaCharge Admin</PageTitle>
+
+<MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+}
+else if (_station is null)
+{
+    <MudAlert Severity="Severity.Error">Station not found.</MudAlert>
+}
+else
+{
+    <MudGrid>
+        <!-- Header -->
+        <MudItem xs="12">
+            <MudPaper Class="pa-4 mb-4">
+                <div class="d-flex justify-space-between align-center">
+                    <div>
+                        <MudText Typo="Typo.h4">@_station.ChargePointId</MudText>
+                        <MudText Typo="Typo.subtitle1" Color="Color.Secondary">@(_station.StationName ?? "Unnamed Station")</MudText>
+                    </div>
+                    <div>
+                        <MudChip T="string" Color="@GetStatusColor(_station.Status)" Size="Size.Medium">@_station.Status</MudChip>
+                        @if (_station.IsConnected)
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.Wifi">Connected</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Icon="@Icons.Material.Filled.WifiOff">Disconnected</MudChip>
+                        }
+                    </div>
+                </div>
+                <MudDivider Class="my-4" />
+                <div class="d-flex gap-2">
+                    <MudButton Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.Edit" 
+                               OnClick="@(() => Navigation.NavigateTo($"/stations/{Id}/edit"))">
+                        Edit
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlayArrow"
+                               OnClick="@(() => Navigation.NavigateTo($"/stations/{Id}/actions"))"
+                               Disabled="@(!_station.IsConnected)">
+                        Actions
+                    </MudButton>
+                </div>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Station Info -->
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-4">Station Information</MudText>
+                <MudSimpleTable Dense="true" Hover="true">
+                    <tbody>
+                        <tr><td><strong>Charge Point ID</strong></td><td>@_station.ChargePointId</td></tr>
+                        <tr><td><strong>Name</strong></td><td>@(_station.StationName ?? "-")</td></tr>
+                        <tr><td><strong>Location</strong></td><td>@(_station.LocationName ?? _station.LocationId ?? "-")</td></tr>
+                        <tr><td><strong>Model</strong></td><td>@(_station.Model ?? "-")</td></tr>
+                        <tr><td><strong>Serial Number</strong></td><td>@(_station.SerialNumber ?? "-")</td></tr>
+                        <tr><td><strong>Firmware</strong></td><td>@(_station.FirmwareVersion ?? "-")</td></tr>
+                        <tr><td><strong>Last Heartbeat</strong></td><td>@(_station.LastHeartbeat?.ToString("g") ?? "-")</td></tr>
+                    </tbody>
+                </MudSimpleTable>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Connectors -->
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-4">Connectors (@_station.Connectors.Count)</MudText>
+                @if (_station.Connectors.Count == 0)
+                {
+                    <MudText Color="Color.Secondary">No connectors configured.</MudText>
+                }
+                else
+                {
+                    <MudSimpleTable Dense="true" Hover="true">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Status</th>
+                                <th>Power</th>
+                                <th>Error</th>
+                                <th>Last Update</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var conn in _station.Connectors)
+                            {
+                                <tr>
+                                    <td>@conn.ConnectorNumber</td>
+                                    <td><MudChip T="string" Color="@GetStatusColor(conn.Status)" Size="Size.Small">@conn.Status</MudChip></td>
+                                    <td>@conn.PowerKw kW</td>
+                                    <td>@(conn.ErrorCode ?? "-")</td>
+                                    <td>@(conn.LastStatusTimestamp?.ToString("g") ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <!-- Recent Activity -->
+        <MudItem xs="12">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-4">Recent Activity</MudText>
+                @if (_station.RecentActivity.Count == 0)
+                {
+                    <MudText Color="Color.Secondary">No recent activity.</MudText>
+                }
+                else
+                {
+                    <MudTimeline TimelinePosition="TimelinePosition.Start">
+                        @foreach (var activity in _station.RecentActivity.Take(10))
+                        {
+                            <MudTimelineItem Color="Color.Primary" Size="Size.Small">
+                                <ItemContent>
+                                    <MudText Typo="Typo.body2"><strong>@activity.Type</strong></MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@activity.Timestamp.ToString("g")</MudText>
+                                    <MudText Typo="Typo.body2">@activity.Description</MudText>
+                                </ItemContent>
+                            </MudTimelineItem>
+                        }
+                    </MudTimeline>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private bool _loading = true;
+    private StationDetailViewModel? _station;
+    private List<BreadcrumbItem> _breadcrumbs = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbs =
+        [
+            new BreadcrumbItem("Stations", "/stations"),
+            new BreadcrumbItem("Details", null, disabled: true)
+        ];
+
+        await LoadStationAsync();
+    }
+
+    private async Task LoadStationAsync()
+    {
+        _loading = true;
+
+        try
+        {
+            var result = await StationService.GetStationAsync(Id);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                _station = result.Data;
+                _breadcrumbs[1] = new BreadcrumbItem(_station.ChargePointId, null, disabled: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading station {Id}", Id);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static Color GetStatusColor(string? status) => status?.ToLower() switch
+    {
+        "available" => Color.Success,
+        "charging" => Color.Primary,
+        "faulted" => Color.Error,
+        "unavailable" => Color.Default,
+        "reserved" => Color.Warning,
+        "preparing" => Color.Info,
+        "finishing" => Color.Info,
+        _ => Color.Default
+    };
+}

@@ -1,0 +1,343 @@
+@page "/stations/{Id:guid}/actions"
+@rendermode InteractiveServer
+@inject StationService StationService
+@inject OcppAdminClient OcppClient
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject ILogger<StationActions> Logger
+
+<PageTitle>Station Actions - AlfaCharge Admin</PageTitle>
+
+<MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+}
+else if (_station is null)
+{
+    <MudAlert Severity="Severity.Error">Station not found.</MudAlert>
+}
+else if (!_station.IsConnected)
+{
+    <MudAlert Severity="Severity.Warning">
+        Station is not connected. OCPP actions are disabled.
+        <MudButton Variant="Variant.Text" OnClick="@(() => Navigation.NavigateTo($"/stations/{Id}"))">View Station</MudButton>
+    </MudAlert>
+}
+else
+{
+    <MudPaper Class="pa-4 mb-4">
+        <div class="d-flex justify-space-between align-center">
+            <div>
+                <MudText Typo="Typo.h5">@_station.ChargePointId</MudText>
+                <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.Wifi">Connected</MudChip>
+            </div>
+            <MudButton Variant="Variant.Outlined" OnClick="@(() => Navigation.NavigateTo($"/stations/{Id}"))">
+                Back to Details
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <MudGrid>
+        <!-- Remote Operations -->
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-4">Remote Operations</MudText>
+                
+                <MudStack Spacing="2">
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" StartIcon="@Icons.Material.Filled.PlayArrow"
+                               OnClick="ShowRemoteStartDialog" Disabled="_executing">
+                        Remote Start Transaction
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" StartIcon="@Icons.Material.Filled.Stop"
+                               OnClick="ShowRemoteStopDialog" Disabled="_executing">
+                        Remote Stop Transaction
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" StartIcon="@Icons.Material.Filled.RestartAlt"
+                               OnClick="ShowResetDialog" Disabled="_executing" Color="Color.Warning">
+                        Reset Station
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Trigger Messages -->
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-4">Trigger Messages</MudText>
+                
+                <MudStack Spacing="2">
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="@(() => TriggerMessageAsync("StatusNotification"))" Disabled="_executing">
+                        Trigger StatusNotification
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="@(() => TriggerMessageAsync("Heartbeat"))" Disabled="_executing">
+                        Trigger Heartbeat
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="@(() => TriggerMessageAsync("MeterValues"))" Disabled="_executing">
+                        Trigger MeterValues
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="@(() => TriggerMessageAsync("BootNotification"))" Disabled="_executing">
+                        Trigger BootNotification
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Local Authorization List -->
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-4">Local Authorization List</MudText>
+                
+                <MudStack Spacing="2">
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="GetLocalListVersionAsync" Disabled="_executing">
+                        Get Local List Version
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="ShowSendLocalListDialog" Disabled="_executing">
+                        Send Local List
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Reservations -->
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-4">Reservations</MudText>
+                
+                <MudStack Spacing="2">
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="ShowReserveNowDialog" Disabled="_executing">
+                        Reserve Now
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="ShowCancelReservationDialog" Disabled="_executing">
+                        Cancel Reservation
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Charging Profiles -->
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-4">Charging Profiles</MudText>
+                
+                <MudStack Spacing="2">
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="ShowGetCompositeScheduleDialog" Disabled="_executing">
+                        Get Composite Schedule
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="ShowSetChargingProfileDialog" Disabled="_executing">
+                        Set Charging Profile
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" FullWidth="true" OnClick="ShowClearChargingProfileDialog" Disabled="_executing">
+                        Clear Charging Profile
+                    </MudButton>
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <!-- Execution Progress -->
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-4">Execution Status</MudText>
+                
+                @if (_executing)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-2" />
+                    <MudText>Executing @_currentAction...</MudText>
+                }
+                else if (_lastResult is not null)
+                {
+                    <MudAlert Severity="@(_lastResult.Success ? Severity.Success : Severity.Error)" Class="mb-2">
+                        @(_lastResult.Success ? "Action completed successfully" : _lastResult.Message)
+                    </MudAlert>
+                    @if (!string.IsNullOrEmpty(_lastResult.Response))
+                    {
+                        <MudText Typo="Typo.caption">Response:</MudText>
+                        <MudPaper Class="pa-2" Style="background-color: #f5f5f5; overflow-x: auto;">
+                            <pre style="margin: 0; white-space: pre-wrap;">@_lastResult.Response</pre>
+                        </MudPaper>
+                    }
+                }
+                else
+                {
+                    <MudText Color="Color.Secondary">No actions executed yet.</MudText>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private bool _loading = true;
+    private bool _executing;
+    private string? _currentAction;
+    private StationDetailViewModel? _station;
+    private OcppActionResult? _lastResult;
+    private CancellationTokenSource? _cts;
+    private List<BreadcrumbItem> _breadcrumbs = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbs =
+        [
+            new BreadcrumbItem("Stations", "/stations"),
+            new BreadcrumbItem("Actions", null, disabled: true)
+        ];
+
+        await LoadStationAsync();
+    }
+
+    private async Task LoadStationAsync()
+    {
+        try
+        {
+            var result = await StationService.GetStationAsync(Id);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                _station = result.Data;
+                _breadcrumbs[1] = new BreadcrumbItem($"{_station.ChargePointId} Actions", null, disabled: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading station {Id}", Id);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ExecuteActionAsync(string actionName, Func<CancellationToken, Task<ApiResult<OcppActionResult>>> action)
+    {
+        _cts?.Cancel();
+        _cts = new CancellationTokenSource();
+        _executing = true;
+        _currentAction = actionName;
+        _lastResult = null;
+
+        try
+        {
+            var result = await action(_cts.Token);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                _lastResult = result.Data;
+            }
+            else
+            {
+                _lastResult = new OcppActionResult { Success = false, Message = result.Error ?? "Action failed" };
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            _lastResult = new OcppActionResult { Success = false, Message = "Action cancelled" };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error executing {Action}", actionName);
+            _lastResult = new OcppActionResult { Success = false, Message = ex.Message };
+        }
+        finally
+        {
+            _executing = false;
+            _currentAction = null;
+        }
+    }
+
+    private async Task ShowRemoteStartDialog()
+    {
+        var parameters = new DialogParameters<RemoteStartDialog>();
+        var dialog = await DialogService.ShowAsync<RemoteStartDialog>("Remote Start Transaction", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled && result.Data is RemoteStartRequest request)
+        {
+            await ExecuteActionAsync("Remote Start", ct => 
+                OcppClient.RemoteStartAsync(_station!.ChargePointId, request, ct));
+        }
+    }
+
+    private async Task ShowRemoteStopDialog()
+    {
+        var parameters = new DialogParameters<RemoteStopDialog>();
+        var dialog = await DialogService.ShowAsync<RemoteStopDialog>("Remote Stop Transaction", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled && result.Data is RemoteStopRequest request)
+        {
+            await ExecuteActionAsync("Remote Stop", ct => 
+                OcppClient.RemoteStopAsync(_station!.ChargePointId, request, ct));
+        }
+    }
+
+    private async Task ShowResetDialog()
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, "Are you sure you want to reset this station?" },
+            { x => x.ButtonText, "Reset" },
+            { x => x.Color, Color.Warning }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Reset Station", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            await ExecuteActionAsync("Reset", ct => 
+                OcppClient.ResetAsync(_station!.ChargePointId, new ResetRequest { Type = ResetType.Soft }, ct));
+        }
+    }
+
+    private async Task TriggerMessageAsync(string message)
+    {
+        await ExecuteActionAsync($"Trigger {message}", ct => 
+            OcppClient.TriggerMessageAsync(_station!.ChargePointId, new TriggerMessageRequest { RequestedMessage = message }, ct));
+    }
+
+    private async Task GetLocalListVersionAsync()
+    {
+        await ExecuteActionAsync("Get Local List Version", ct => 
+            OcppClient.GetLocalListVersionAsync(_station!.ChargePointId, ct));
+    }
+
+    private async Task ShowSendLocalListDialog()
+    {
+        Snackbar.Add("Send Local List dialog - Coming soon", Severity.Info);
+    }
+
+    private async Task ShowReserveNowDialog()
+    {
+        Snackbar.Add("Reserve Now dialog - Coming soon", Severity.Info);
+    }
+
+    private async Task ShowCancelReservationDialog()
+    {
+        Snackbar.Add("Cancel Reservation dialog - Coming soon", Severity.Info);
+    }
+
+    private async Task ShowGetCompositeScheduleDialog()
+    {
+        Snackbar.Add("Get Composite Schedule dialog - Coming soon", Severity.Info);
+    }
+
+    private async Task ShowSetChargingProfileDialog()
+    {
+        Snackbar.Add("Set Charging Profile dialog - Coming soon", Severity.Info);
+    }
+
+    private async Task ShowClearChargingProfileDialog()
+    {
+        Snackbar.Add("Clear Charging Profile dialog - Coming soon", Severity.Info);
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}

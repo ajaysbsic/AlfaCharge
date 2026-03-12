@@ -1,0 +1,210 @@
+@page "/locations/new"
+@page "/locations/{LocationId}/edit"
+@rendermode InteractiveServer
+@inject LocationService LocationService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject ILogger<LocationEdit> Logger
+
+<PageTitle>@(_isNew ? "New Location" : "Edit Location") - AlfaCharge Admin</PageTitle>
+
+<MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">@(_isNew ? "Create New Location" : "Edit Location")</MudText>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" />
+    }
+    else
+    {
+        <EditForm Model="_model" OnValidSubmit="SaveAsync">
+            <DataAnnotationsValidator />
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.LocationId" 
+                                  Label="Location ID" 
+                                  Required="true"
+                                  RequiredError="Location ID is required"
+                                  Disabled="@(!_isNew)"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.LocationName" 
+                                  Label="Location Name" 
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.City" 
+                                  Label="City" 
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.Country" 
+                                  Label="Country" 
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_model.Latitude" 
+                                     Label="Latitude" 
+                                     Variant="Variant.Outlined"
+                                     Min="-90" Max="90" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="_model.Longitude" 
+                                     Label="Longitude" 
+                                     Variant="Variant.Outlined"
+                                     Min="-180" Max="180" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.BusinessName" 
+                                  Label="Business Name" 
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_model.BusinessOwner" 
+                                  Label="Business Owner" 
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+
+            <MudDivider Class="my-4" />
+
+            <div class="d-flex gap-2">
+                <MudButton ButtonType="ButtonType.Submit" 
+                           Variant="Variant.Filled" 
+                           Color="Color.Primary"
+                           Disabled="_saving">
+                    @if (_saving)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    }
+                    @(_isNew ? "Create" : "Save")
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" OnClick="Cancel">Cancel</MudButton>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_error))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4">@_error</MudAlert>
+            }
+        </EditForm>
+    }
+</MudPaper>
+
+@code {
+    [Parameter]
+    public string? LocationId { get; set; }
+
+    private bool _isNew => string.IsNullOrEmpty(LocationId);
+    private bool _loading = true;
+    private bool _saving;
+    private string? _error;
+    private LocationEditModel _model = new();
+    private List<BreadcrumbItem> _breadcrumbs = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _breadcrumbs =
+        [
+            new BreadcrumbItem("Locations", "/locations"),
+            new BreadcrumbItem(_isNew ? "New" : "Edit", null, disabled: true)
+        ];
+
+        if (!_isNew)
+        {
+            await LoadLocationAsync();
+        }
+        else
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadLocationAsync()
+    {
+        try
+        {
+            var result = await LocationService.GetLocationAsync(LocationId!);
+            if (result.IsSuccess && result.Data is not null)
+            {
+                var location = result.Data;
+                _model = new LocationEditModel
+                {
+                    LocationId = location.LocationId,
+                    LocationName = location.LocationName,
+                    City = location.City,
+                    Country = location.Country,
+                    Latitude = location.Latitude,
+                    Longitude = location.Longitude,
+                    BusinessName = location.BusinessName
+                };
+                _breadcrumbs[1] = new BreadcrumbItem($"Edit: {location.LocationId}", null, disabled: true);
+            }
+            else
+            {
+                _error = "Location not found";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading location {LocationId}", LocationId);
+            _error = "Failed to load location";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _error = null;
+
+        try
+        {
+            if (_isNew)
+            {
+                var result = await LocationService.CreateLocationAsync(_model);
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Location created successfully", Severity.Success);
+                    Navigation.NavigateTo("/locations");
+                }
+                else
+                {
+                    _error = result.Error ?? "Failed to create location";
+                }
+            }
+            else
+            {
+                var result = await LocationService.UpdateLocationAsync(LocationId!, _model);
+                if (result.IsSuccess)
+                {
+                    Snackbar.Add("Location updated successfully", Severity.Success);
+                    Navigation.NavigateTo("/locations");
+                }
+                else
+                {
+                    _error = result.Error ?? "Failed to update location";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error saving location");
+            _error = "An unexpected error occurred";
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/locations");
+    }
+}

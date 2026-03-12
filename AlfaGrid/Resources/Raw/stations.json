@@ -1,0 +1,713 @@
+{
+  "data": [
+    {
+      "location_uid": "adbcf896-c678-4028-8486-65af62a4614e",
+      "location_pk": 5,
+      "evse_pk": 98,
+      "charge_point_id": "SN10052506033136",
+      "connectors": [
+        {
+          "connector_pk": 270,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "alfaChargeSmart-01",
+      "createdAt": "2025-11-02T07:45:46.994Z"
+    },
+    {
+      "location_uid": "adbcf896-c678-4028-8486-65af62a4614e",
+      "location_pk": 5,
+      "evse_pk": 99,
+      "charge_point_id": "SN10052506033281",
+      "connectors": [
+        {
+          "connector_pk": 251,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "alfaChargeSmart-02",
+      "createdAt": "2025-11-02T07:46:48.301Z"
+    },
+    {
+      "location_uid": "adbcf896-c678-4028-8486-65af62a4614e",
+      "location_pk": 5,
+      "evse_pk": 101,
+      "charge_point_id": "SN10052506033195",
+      "connectors": [
+        {
+          "connector_pk": 253,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "alfaChargeSmart-04",
+      "createdAt": "2025-11-02T07:48:44.221Z"
+    },
+    {
+      "location_uid": "adbcf896-c678-4028-8486-65af62a4614e",
+      "location_pk": 5,
+      "evse_pk": 102,
+      "charge_point_id": "SN10052506033055",
+      "connectors": [
+        {
+          "connector_pk": 255,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "alfaChargeSmart-05",
+      "createdAt": "2025-11-02T07:49:41.500Z"
+    },
+    {
+      "location_uid": "adbcf896-c678-4028-8486-65af62a4614e",
+      "location_pk": 5,
+      "evse_pk": 103,
+      "charge_point_id": "SN10052506033176",
+      "connectors": [
+        {
+          "connector_pk": 256,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "alfaChargeSmart-06",
+      "createdAt": "2025-11-02T07:51:57.002Z"
+    },
+    {
+      "location_uid": "adbcf896-c678-4028-8486-65af62a4614e",
+      "location_pk": 5,
+      "evse_pk": 104,
+      "charge_point_id": "SN10052506033076",
+      "connectors": [
+        {
+          "connector_pk": 257,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "alfaChargeSmart-07",
+      "createdAt": "2025-11-02T07:52:39.744Z"
+    },
+    {
+      "location_uid": "adbcf896-c678-4028-8486-65af62a4614e",
+      "location_pk": 5,
+      "evse_pk": 105,
+      "charge_point_id": "SN10052506033058",
+      "connectors": [
+        {
+          "connector_pk": 258,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "alfaChargeSmart-08",
+      "createdAt": "2025-11-02T07:54:09.205Z"
+    },
+    {
+      "location_uid": "adbcf896-c678-4028-8486-65af62a4614e",
+      "location_pk": 5,
+      "evse_pk": 111,
+      "charge_point_id": "SN10052503152540",
+      "connectors": [
+        {
+          "connector_pk": 276,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Carport alfaChargeSmart",
+      "createdAt": "2025-11-02T11:54:33.015Z"
+    },
+    {
+      "location_uid": "adbcf896-c678-4028-8486-65af62a4614e",
+      "location_pk": 5,
+      "evse_pk": 109,
+      "charge_point_id": "alfaChargeDC01",
+      "connectors": [
+        {
+          "connector_pk": 262,
+          "standard": {
+            "id": 21,
+            "value": "IEC_62196_T2_COMBO",
+            "uiName": "CCS 2"
+          },
+          "power_type": {
+            "id": 3,
+            "value": "DC"
+          },
+          "max_electric_power": "120.0000"
+        },
+        {
+          "connector_pk": 263,
+          "standard": {
+            "id": 21,
+            "value": "IEC_62196_T2_COMBO",
+            "uiName": "CCS 2"
+          },
+          "power_type": {
+            "id": 3,
+            "value": "DC"
+          },
+          "max_electric_power": "120.0000"
+        }
+      ],
+      "model": {
+        "id": 10,
+        "name": "alfaCharge DC Fast Charger",
+        "max_electric_power": "120.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "alfaChargeDC01",
+      "createdAt": "2025-11-02T08:00:51.015Z"
+    },
+    {
+      "location_uid": "adbcf896-c678-4028-8486-65af62a4614e",
+      "location_pk": 5,
+      "evse_pk": 110,
+      "charge_point_id": "CarPort_alfaChargeDC",
+      "connectors": [
+        {
+          "connector_pk": 277,
+          "standard": {
+            "id": 21,
+            "value": "IEC_62196_T2_COMBO",
+            "uiName": "CCS 2"
+          },
+          "power_type": {
+            "id": 3,
+            "value": "DC"
+          },
+          "max_electric_power": "120.0000"
+        },
+        {
+          "connector_pk": 278,
+          "standard": {
+            "id": 21,
+            "value": "IEC_62196_T2_COMBO",
+            "uiName": "CCS 2"
+          },
+          "power_type": {
+            "id": 3,
+            "value": "DC"
+          },
+          "max_electric_power": "120.0000"
+        }
+      ],
+      "model": {
+        "id": 10,
+        "name": "alfaCharge DC Fast Charger",
+        "max_electric_power": "120.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Carport alfaCharge DC",
+      "createdAt": "2025-11-02T08:02:58.748Z"
+    },
+    {
+      "location_uid": "7f38ed30-0a05-4256-8b0f-c90064f1a915",
+      "location_pk": 19,
+      "evse_pk": 201,
+      "charge_point_id": "RF_AC_01",
+      "connectors": [
+        {
+          "connector_pk": 401,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Renewable Factory AC-01",
+      "createdAt": "2025-11-02T08:00:00.000Z"
+    },
+    {
+      "location_uid": "7f38ed30-0a05-4256-8b0f-c90064f1a915",
+      "location_pk": 19,
+      "evse_pk": 202,
+      "charge_point_id": "RF_AC_02",
+      "connectors": [
+        {
+          "connector_pk": 402,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Renewable Factory AC-02",
+      "createdAt": "2025-11-02T08:01:00.000Z"
+    },
+    {
+      "location_uid": "7f38ed30-0a05-4256-8b0f-c90064f1a915",
+      "location_pk": 19,
+      "evse_pk": 203,
+      "charge_point_id": "RF_AC_03",
+      "connectors": [
+        {
+          "connector_pk": 403,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Renewable Factory AC-03",
+      "createdAt": "2025-11-02T08:02:00.000Z"
+    },
+    {
+      "location_uid": "7f38ed30-0a05-4256-8b0f-c90064f1a915",
+      "location_pk": 19,
+      "evse_pk": 204,
+      "charge_point_id": "RF_DC_01",
+      "connectors": [
+        {
+          "connector_pk": 404,
+          "standard": {
+            "id": 21,
+            "value": "IEC_62196_T2_COMBO",
+            "uiName": "CCS 2"
+          },
+          "power_type": {
+            "id": 3,
+            "value": "DC"
+          },
+          "max_electric_power": "120.0000"
+        },
+        {
+          "connector_pk": 405,
+          "standard": {
+            "id": 21,
+            "value": "IEC_62196_T2_COMBO",
+            "uiName": "CCS 2"
+          },
+          "power_type": {
+            "id": 3,
+            "value": "DC"
+          },
+          "max_electric_power": "120.0000"
+        }
+      ],
+      "model": {
+        "id": 10,
+        "name": "alfaCharge DC Fast Charger",
+        "max_electric_power": "120.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Renewable Factory DC-01",
+      "createdAt": "2025-11-02T08:03:00.000Z"
+    },
+    {
+      "location_uid": "c431b8e0-fe53-420d-9fed-f152350d5dbc",
+      "location_pk": 7,
+      "evse_pk": 301,
+      "charge_point_id": "TT_AC_01",
+      "connectors": [
+        {
+          "connector_pk": 501,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Twin Towers AC-01",
+      "createdAt": "2025-11-02T09:00:00.000Z"
+    },
+    {
+      "location_uid": "c431b8e0-fe53-420d-9fed-f152350d5dbc",
+      "location_pk": 7,
+      "evse_pk": 302,
+      "charge_point_id": "TT_AC_02",
+      "connectors": [
+        {
+          "connector_pk": 502,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Twin Towers AC-02",
+      "createdAt": "2025-11-02T09:01:00.000Z"
+    },
+    {
+      "location_uid": "c431b8e0-fe53-420d-9fed-f152350d5dbc",
+      "location_pk": 7,
+      "evse_pk": 303,
+      "charge_point_id": "TT_DC_01",
+      "connectors": [
+        {
+          "connector_pk": 503,
+          "standard": {
+            "id": 21,
+            "value": "IEC_62196_T2_COMBO",
+            "uiName": "CCS 2"
+          },
+          "power_type": {
+            "id": 3,
+            "value": "DC"
+          },
+          "max_electric_power": "120.0000"
+        }
+      ],
+      "model": {
+        "id": 10,
+        "name": "alfaCharge DC Fast Charger",
+        "max_electric_power": "120.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Twin Towers DC-01",
+      "createdAt": "2025-11-02T09:02:00.000Z"
+    },
+    {
+      "location_uid": "638c4385-d398-414d-ad9d-73a302741314",
+      "location_pk": 20,
+      "evse_pk": 401,
+      "charge_point_id": "NADEC_AC_01",
+      "connectors": [
+        {
+          "connector_pk": 601,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "NADEC AC-01",
+      "createdAt": "2025-11-02T10:00:00.000Z"
+    },
+    {
+      "location_uid": "638c4385-d398-414d-ad9d-73a302741314",
+      "location_pk": 20,
+      "evse_pk": 402,
+      "charge_point_id": "NADEC_AC_02",
+      "connectors": [
+        {
+          "connector_pk": 602,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "NADEC AC-02",
+      "createdAt": "2025-11-02T10:01:00.000Z"
+    },
+    {
+      "location_uid": "638c4385-d398-414d-ad9d-73a302741314",
+      "location_pk": 20,
+      "evse_pk": 403,
+      "charge_point_id": "NADEC_DC_01",
+      "connectors": [
+        {
+          "connector_pk": 603,
+          "standard": {
+            "id": 21,
+            "value": "IEC_62196_T2_COMBO",
+            "uiName": "CCS 2"
+          },
+          "power_type": {
+            "id": 3,
+            "value": "DC"
+          },
+          "max_electric_power": "120.0000"
+        }
+      ],
+      "model": {
+        "id": 10,
+        "name": "alfaCharge DC Fast Charger",
+        "max_electric_power": "120.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "NADEC DC-01",
+      "createdAt": "2025-11-02T10:02:00.000Z"
+    },
+    {
+      "location_uid": "58cbd894-0347-4aec-8027-65d2f383915a",
+      "location_pk": 24,
+      "evse_pk": 501,
+      "charge_point_id": "MADA_AC_01",
+      "connectors": [
+        {
+          "connector_pk": 701,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Mada Payment AC-01",
+      "createdAt": "2025-11-02T11:00:00.000Z"
+    },
+    {
+      "location_uid": "58cbd894-0347-4aec-8027-65d2f383915a",
+      "location_pk": 24,
+      "evse_pk": 502,
+      "charge_point_id": "MADA_AC_02",
+      "connectors": [
+        {
+          "connector_pk": 702,
+          "standard": {
+            "id": 20,
+            "value": "IEC_62196_T2",
+            "uiName": "AC Type 2"
+          },
+          "power_type": {
+            "id": 2,
+            "value": "AC_3_PHASE"
+          },
+          "max_electric_power": "22.0000"
+        }
+      ],
+      "model": {
+        "id": 11,
+        "name": "alfaChargeSmart",
+        "max_electric_power": "22.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Mada Payment AC-02",
+      "createdAt": "2025-11-02T11:01:00.000Z"
+    },
+    {
+      "location_uid": "58cbd894-0347-4aec-8027-65d2f383915a",
+      "location_pk": 24,
+      "evse_pk": 503,
+      "charge_point_id": "MADA_DC_01",
+      "connectors": [
+        {
+          "connector_pk": 703,
+          "standard": {
+            "id": 21,
+            "value": "IEC_62196_T2_COMBO",
+            "uiName": "CCS 2"
+          },
+          "power_type": {
+            "id": 3,
+            "value": "DC"
+          },
+          "max_electric_power": "120.0000"
+        }
+      ],
+      "model": {
+        "id": 10,
+        "name": "alfaCharge DC Fast Charger",
+        "max_electric_power": "120.0000"
+      },
+      "installationStatus": "COMMISSIONED",
+      "name": "Mada Payment DC-01",
+      "createdAt": "2025-11-02T11:02:00.000Z"
+    }
+  ],
+  "count": 24,
+  "offset": 0,
+  "limit": 50
+}

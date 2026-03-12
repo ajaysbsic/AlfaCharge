@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AlfaGrid.Source.View.HomePage"
+             xmlns:maps="clr-namespace:Microsoft.Maui.Controls.Maps;assembly=Microsoft.Maui.Controls.Maps"
+             xmlns:viewModel="clr-namespace:AlfaGrid.Source.ViewModel"
+             xmlns:handlers="clr-namespace:AlfaGrid.Source.Handler"
+             xmlns:models="clr-namespace:AlfaGrid.Source.Models"
+             xmlns:controls="clr-namespace:AlfaGrid.Source.Controls"
+             x:DataType="viewModel:HomePageViewModel"
+             Shell.NavBarIsVisible="False"
+             SafeAreaEdges="None">
+    <Grid SafeAreaEdges="None">
+        <!-- Map control fills the page -->
+        <maps:Map x:Name="GoogleMap" 
+                  IsShowingUser="True"
+                  MapClicked="OnMapClicked"/>
+
+        <!-- Overlay Grid for Tap to Close Flyout -->
+        <Grid BackgroundColor="#000000" Opacity="0.5" IsVisible="False" x:Name="TapOverlay">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Tapped="OnTappedOutsideFlyout" />
+            </Grid.GestureRecognizers>
+        </Grid>
+        
+        <!-- CarouselView overlay at bottom using custom control -->
+        <CarouselView x:Name="PlacesCarousel"
+                      ItemsSource="{Binding ChargingLocations}"
+                      HeightRequest="260"
+                      VerticalOptions="End"
+                      Margin="16,48"
+                      IsScrollAnimated="True"
+                      IsVisible="{Binding IsLocationPreviewVisible, Converter={StaticResource InvertedBoolConverter}}"
+                      CurrentItemChanged="OnCarouselCurrentItemChanged">
+            <CarouselView.ItemTemplate>
+                <DataTemplate x:DataType="models:ChargingLocation">
+                    <Grid>
+                        <controls:ChargingLocationCard />
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModel:HomePageViewModel}}, Path=SelectLocationCommand}"
+                                                CommandParameter="{Binding .}"/>
+                        </Grid.GestureRecognizers>
+                    </Grid>
+                </DataTemplate>
+            </CarouselView.ItemTemplate>
+        </CarouselView>
+
+        <!-- Floating action buttons stack (bottom-right) -->
+        <StackLayout Orientation="Vertical"
+                     Spacing="12"
+                     Padding="0"
+                     HorizontalOptions="End"
+                     VerticalOptions="End"
+                     Margin="0,0,16,288"
+                     IsVisible="{Binding IsLocationPreviewVisible, Converter={StaticResource InvertedBoolConverter}}">
+            <!-- Current location -->
+            <Border StrokeShape="RoundRectangle 10" BackgroundColor="White" Padding="10">
+                <Image Source="current_location.png" HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCurrentLocationTapped" />
+                    </Image.GestureRecognizers>
+                </Image>
+            </Border>
+
+            <!-- QR code -->
+            <Border StrokeShape="RoundRectangle 10" BackgroundColor="White" Padding="10">
+                <Image Source="qr_icon.png" HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnQrTapped" />
+                    </Image.GestureRecognizers>
+                </Image>
+            </Border>
+
+            <!-- Menu -->
+            <Border StrokeShape="RoundRectangle 10" BackgroundColor="White" Padding="10">
+                <Image Source="menu_icon.png" HeightRequest="24" WidthRequest="24">
+                    <Image.GestureRecognizers>
+                        <TapGestureRecognizer Command="{Binding NavigateToLocationListCommand}" />
+                    </Image.GestureRecognizers>
+                </Image>
+            </Border>
+        </StackLayout>
+
+        <!-- Search bar overlay -->
+        <Grid Padding="16,0"
+              VerticalOptions="Start"
+              HorizontalOptions="Fill">
+            <Grid.Margin>
+                <OnPlatform x:TypeArguments="Thickness">
+                    <On Platform="Android" Value="0,8,0,0"/>
+                    <On Platform="iOS" Value="0,8,0,0"/>
+                    <On Platform="WinUI" Value="0,8,0,0"/>
+                </OnPlatform>
+            </Grid.Margin>
+            <Border StrokeShape="RoundRectangle 10"
+                    BackgroundColor="White"
+                    HeightRequest="45"
+                    HorizontalOptions="Fill">
+                <Grid ColumnDefinitions="Auto,*,Auto"
+                      VerticalOptions="Center"
+                      HeightRequest="60">
+                    <!-- Hamburger Menu Icon -->
+                    <Image Source="hamburger_icon.png"
+                           HeightRequest="16"
+                           WidthRequest="16"
+                           VerticalOptions="Center"
+                           Margin="16,0,8,0"
+                           Grid.Column="0">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnHamburgerIconTapped" />
+                        </Image.GestureRecognizers>
+                    </Image>
+
+                    <!-- Search Entry -->
+                    <handlers:BorderlessEntry Placeholder="Find Charging Location"
+                                              FontSize="16"
+                                              TextColor="Black"
+                                              BackgroundColor="Transparent"
+                                              VerticalOptions="Center"
+                                              Grid.Column="1" />
+
+                    <!-- Filter Icon -->
+                    <Image Source="filter_icon.png"
+                           HeightRequest="16"
+                           WidthRequest="16"
+                           VerticalOptions="Center"
+                           Margin="8,0,16,0"
+                           Grid.Column="2">
+                        <Image.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenFilterCommand}"/>
+                        </Image.GestureRecognizers>
+                    </Image>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Location Preview Overlay (appears when pin is clicked) -->
+        <Grid IsVisible="{Binding IsLocationPreviewVisible}"
+              VerticalOptions="Fill"
+              HorizontalOptions="Fill"
+              BackgroundColor="Transparent">
+            
+            <!-- Semi-transparent overlay -->
+            <BoxView BackgroundColor="Black" 
+                     Opacity="0.3"
+                     VerticalOptions="Fill"
+                     HorizontalOptions="Fill">
+                <BoxView.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding CloseLocationPreviewCommand}" />
+                </BoxView.GestureRecognizers>
+            </BoxView>
+
+            <!-- Location Detail Preview Card -->
+            <Border BackgroundColor="White"
+                    StrokeShape="RoundRectangle 24,24,0,0"
+                    VerticalOptions="End"
+                    HorizontalOptions="Fill"
+                    Margin="0"
+                    Padding="0">
+                
+                <ScrollView MaximumHeightRequest="650">
+                    <VerticalStackLayout Spacing="0">
+                        
+                        <!-- Go Back Button -->
+                        <Grid Padding="20,16,20,12">
+                            <HorizontalStackLayout Spacing="8">
+                                <Image Source="arrow_left.png"
+                                       HeightRequest="20"
+                                       WidthRequest="20"
+                                       VerticalOptions="Center"/>
+                                <Label Text="Go back"
+                                       FontSize="16"
+                                       TextColor="#333333"
+                                       VerticalOptions="Center"/>
+                                <HorizontalStackLayout.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding CloseLocationPreviewCommand}" />
+                                </HorizontalStackLayout.GestureRecognizers>
+                            </HorizontalStackLayout>
+                        </Grid>
+
+                        <!-- Location Name and Info -->
+                        <VerticalStackLayout Padding="20,0,20,20" Spacing="8">
+                            <!-- Orange indicator dot with name -->
+                            <HorizontalStackLayout Spacing="12">
+                                <Ellipse Fill="#FF9800"
+                                         WidthRequest="12"
+                                         HeightRequest="12"
+                                         VerticalOptions="Center"/>
+                                <Label Text="{Binding SelectedLocation.Name}"
+                                       FontSize="24"
+                                       FontAttributes="Bold"
+                                       TextColor="#0E2A47"
+                                       VerticalOptions="Center"/>
+                            </HorizontalStackLayout>
+
+                            <!-- Address -->
+                            <Label Text="{Binding SelectedLocation.Address}"
+                                   FontSize="14"
+                                   TextColor="#6D7A8A"
+                                   Margin="24,0,0,0"/>
+
+                            <!-- Reviews Placeholder -->
+                            <Label Text="No Reviews Available"
+                                   FontSize="12"
+                                   TextColor="#999999"
+                                   Margin="24,4,0,8"/>
+
+                            <!-- Operating Hours -->
+                            <Label Text="{Binding SelectedLocation.OperatingHours}"
+                                   FontSize="16"
+                                   FontAttributes="Bold"
+                                   TextColor="#0066FF"
+                                   Margin="24,0,0,0"/>
+                        </VerticalStackLayout>
+
+                        <!-- Action Buttons -->
+                        <Grid ColumnDefinitions="*,*,*,*"
+                              Margin="20,0,20,20"
+                              ColumnSpacing="12">
+                            
+                            <!-- Directions Button -->
+                            <Border Grid.Column="0"
+                                    BackgroundColor="#0066FF"
+                                    StrokeShape="RoundRectangle 12"
+                                    Padding="12,16">
+                                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                                    <Image Source="directions_icon.png"
+                                           HeightRequest="24"
+                                           WidthRequest="24"
+                                           Aspect="AspectFit"/>
+                                    <Label Text="Directions"
+                                           TextColor="White"
+                                           FontSize="12"
+                                           HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Tapped="OnDirectionsTapped"/>
+                                </Border.GestureRecognizers>
+                            </Border>
+
+                            <!-- Reserve Button -->
+                            <Border Grid.Column="1"
+                                    BackgroundColor="White"
+                                    StrokeShape="RoundRectangle 12"
+                                    Stroke="#E0E0E0"
+                                    StrokeThickness="1"
+                                    Padding="12,16">
+                                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                                    <Image Source="calendar_icon.png"
+                                           HeightRequest="24"
+                                           WidthRequest="24"
+                                           Aspect="AspectFit"/>
+                                    <Label Text="Reserve"
+                                           TextColor="#333333"
+                                           FontSize="12"
+                                           HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- Scan QR Button -->
+                            <Border Grid.Column="2"
+                                    BackgroundColor="White"
+                                    StrokeShape="RoundRectangle 12"
+                                    Stroke="#E0E0E0"
+                                    StrokeThickness="1"
+                                    Padding="12,16">
+                                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                                    <Image Source="qr_icon.png"
+                                           HeightRequest="24"
+                                           WidthRequest="24"
+                                           Aspect="AspectFit"/>
+                                    <Label Text="Scan QR"
+                                           TextColor="#333333"
+                                           FontSize="12"
+                                           HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                            </Border>
+
+                            <!-- Favorite Button -->
+                            <Border Grid.Column="3"
+                                    BackgroundColor="White"
+                                    StrokeShape="RoundRectangle 12"
+                                    Stroke="#E0E0E0"
+                                    StrokeThickness="1"
+                                    Padding="12,16">
+                                <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                                    <Image Source="star_icon.png"
+                                           HeightRequest="24"
+                                           WidthRequest="24"
+                                           Aspect="AspectFit"/>
+                                    <Label Text="Favorite"
+                                           TextColor="#333333"
+                                           FontSize="12"
+                                           HorizontalOptions="Center"/>
+                                </VerticalStackLayout>
+                            </Border>
+                        </Grid>
+
+                        <!-- Connector Groups List -->
+                        <VerticalStackLayout Padding="20,0,20,20" 
+                                           Spacing="12"
+                                           BindableLayout.ItemsSource="{Binding SelectedLocation.ConnectorGroups}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="models:ConnectorGroup">
+                                    <Border BackgroundColor="White"
+                                            StrokeShape="RoundRectangle 12"
+                                            Stroke="#E0E0E0"
+                                            StrokeThickness="1"
+                                            Padding="16">
+                                        <Grid ColumnDefinitions="Auto,*,Auto">
+                                            
+                                            <!-- Connector Icon -->
+                                            <Border Grid.Column="0"
+                                                    BackgroundColor="#F0F4FA"
+                                                    StrokeShape="RoundRectangle 10"
+                                                    WidthRequest="56"
+                                                    HeightRequest="56"
+                                                    Padding="12">
+                                                <Image Source="{Binding ImageSource}"
+                                                       Aspect="AspectFit"
+                                                       IsAnimationPlaying="False"/>
+                                            </Border>
+
+                                            <!-- Connector Info -->
+                                            <VerticalStackLayout Grid.Column="1"
+                                                               Spacing="4"
+                                                               Margin="12,0,0,0"
+                                                               VerticalOptions="Center">
+                                                <Label Text="{Binding Standard}"
+                                                       FontSize="16"
+                                                       FontAttributes="Bold"
+                                                       TextColor="#0E2A47"/>
+                                                <Label Text="{Binding AvailabilityText}"
+                                                       FontSize="14"
+                                                       TextColor="#333333"/>
+                                            </VerticalStackLayout>
+
+                                            <!-- Power Rating -->
+                                            <Label Grid.Column="2"
+                                                   Text="{Binding PowerRatingText}"
+                                                   FontSize="16"
+                                                   FontAttributes="Bold"
+                                                   TextColor="#0E2A47"
+                                                   VerticalOptions="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </VerticalStackLayout>
+
+                        <!-- Tap to View Full Details -->
+                        <Border BackgroundColor="#F5F5F5"
+                                Margin="0"
+                                Padding="20,16">
+                            <Label Text="Tap anywhere to view full details"
+                                   FontSize="14"
+                                   TextColor="#666666"
+                                   HorizontalOptions="Center"/>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding NavigateToLocationDetailsCommand}" />
+                            </Border.GestureRecognizers>
+                        </Border>
+
+                    </VerticalStackLayout>
+                </ScrollView>
+            </Border>
+        </Grid>
+
+        <!-- Loading Overlay -->
+        <controls:LoadingOverlay IsVisible="{Binding IsBusy}" 
+                                LoadingText="Loading locations..."/>
+    </Grid>
+</ContentPage>

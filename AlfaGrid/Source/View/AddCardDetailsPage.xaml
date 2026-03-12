@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="AlfaGrid.Source.View.AddCardDetailsPage"
+             xmlns:viewModel="clr-namespace:AlfaGrid.Source.ViewModel"
+             xmlns:controls="clr-namespace:AlfaGrid.Source.Controls"
+			 xmlns:handlers="clr-namespace:AlfaGrid.Source.Handler"
+             x:DataType="viewModel:AddCardDetailsPageViewModel"
+             Title="Add Card Details"
+             Shell.NavBarIsVisible="True"
+             BackgroundColor="White">
+    <Grid RowDefinitions="*,Auto" Padding="24">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Spacing="24">
+                <Label Text="Payment Method" FontSize="24" FontAttributes="Bold" TextColor="#0E2A47" Margin="0,16,0,8"/>
+                <Label Text="Add your card details to start charging" FontSize="14" TextColor="#666666" Margin="0,0,0,24"/>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Card Number" FontSize="14" TextColor="#333333"/>
+                    <Border BackgroundColor="#F5F7FB" StrokeThickness="0" Padding="16,12">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+						<handlers:BorderlessEntry
+							Text="{Binding CardNumber}"
+                            VerticalOptions="Center"
+                            Placeholder="1234 5678 9012 3456"
+                            Keyboard="Numeric"
+					        MaxLength="19"
+					        TextColor="#333333"
+					        FontSize="16" />
+                    </Border>
+                </VerticalStackLayout>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="16">
+                    <VerticalStackLayout Spacing="8" Grid.Column="0">
+                        <Label Text="Expiry Date" FontSize="14" TextColor="#333333"/>
+                        <Border BackgroundColor="#F5F7FB" StrokeThickness="0" Padding="16,12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+							<handlers:BorderlessEntry
+								Text="{Binding ExpiryDate}"
+                                Margin="20,0,0,0"
+                                VerticalOptions="Center"
+                                Placeholder="MM/YY"
+                                Keyboard="Numeric"
+					            MaxLength="5"
+					            TextColor="#333333"
+					            FontSize="16" />
+                        </Border>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Spacing="8" Grid.Column="1">
+                        <Label Text="CVV" FontSize="14" TextColor="#333333"/>
+                        <Border BackgroundColor="#F5F7FB" StrokeThickness="0" Padding="16,12">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+							<handlers:BorderlessEntry
+								Text="{Binding Cvv}"
+                                Margin="20,0,0,0"
+                                VerticalOptions="Center"
+                                Placeholder="123"
+                                Keyboard="Numeric"
+								IsPassword="True"
+					            MaxLength="4"
+					            TextColor="#333333"
+					            FontSize="16" />
+                        </Border>
+                    </VerticalStackLayout>
+                </Grid>
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Cardholder Name" FontSize="14" TextColor="#333333"/>
+                    <Border BackgroundColor="#F5F7FB" StrokeThickness="0" Padding="16,12">
+                        <Border.StrokeShape>
+                            <RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+						<handlers:BorderlessEntry
+								Text="{Binding CardholderName}"
+                                Margin="20,0,0,0"
+                                VerticalOptions="Center"
+                                Placeholder="John Doe"
+					            TextColor="#333333"
+					            FontSize="16" />
+                    </Border>
+                </VerticalStackLayout>
+                <HorizontalStackLayout Spacing="12" Margin="0,8,0,0">
+                    <CheckBox IsChecked="{Binding SaveCard}" Color="#0066FF"/>
+                    <Label Text="Save this card for future use" FontSize="14" TextColor="#666666" VerticalOptions="Center"/>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+        <Border Grid.Row="1" Margin="0,16,0,8" BackgroundColor="#F79A1B" StrokeThickness="0" HeightRequest="56" Padding="16">
+            <Border.StrokeShape>
+                <RoundRectangle CornerRadius="28"/>
+            </Border.StrokeShape>
+            <Label Text="Continue" TextColor="White" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center"/>
+            <Border.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding ContinueCommand}"/>
+            </Border.GestureRecognizers>
+        </Border>
+        <controls:LoadingOverlay Grid.RowSpan="2" IsVisible="{Binding IsBusy}" LoadingText="Processing..."/>
+    </Grid>
+</ContentPage>

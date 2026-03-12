@@ -1,0 +1,187 @@
+@page "/locations"
+@rendermode InteractiveServer
+@inject LocationService LocationService
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject ILogger<LocationsList> Logger
+
+<PageTitle>Locations - AlfaCharge Admin</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Locations</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudTextField @bind-Value="_searchText" 
+                          Label="Search" 
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.End" 
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          DebounceInterval="400"
+                          OnDebounceIntervalElapsed="OnSearchChanged" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" 
+                       OnClick="@(() => Navigation.NavigateTo("/locations/new"))" Class="mt-2">
+                Add Location
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _error = null">
+        @_error
+    </MudAlert>
+}
+
+<MudTable ServerData="LoadLocationsAsync" 
+          @ref="_table"
+          Dense="true" 
+          Hover="true" 
+          Bordered="true"
+          Striped="true"
+          Loading="_loading">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortLabel="locationid" T="LocationViewModel">Location ID</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="name" T="LocationViewModel">Name</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortLabel="city" T="LocationViewModel">City</MudTableSortLabel></MudTh>
+        <MudTh>Country</MudTh>
+        <MudTh>Business</MudTh>
+        <MudTh>Stations</MudTh>
+        <MudTh>Connectors</MudTh>
+        <MudTh>Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Location ID">@context.LocationId</MudTd>
+        <MudTd DataLabel="Name">@(context.LocationName ?? "-")</MudTd>
+        <MudTd DataLabel="City">@(context.City ?? "-")</MudTd>
+        <MudTd DataLabel="Country">@(context.Country ?? "-")</MudTd>
+        <MudTd DataLabel="Business">@(context.BusinessName ?? "-")</MudTd>
+        <MudTd DataLabel="Stations">@context.StationCount</MudTd>
+        <MudTd DataLabel="Connectors">
+            <MudChip T="string" Color="Color.Success" Size="Size.Small">@context.AvailableConnectors</MudChip>
+            <MudChip T="string" Color="Color.Primary" Size="Size.Small">@context.ChargingConnectors</MudChip>
+        </MudTd>
+        <MudTd DataLabel="Actions">
+            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" 
+                           OnClick="@(() => Navigation.NavigateTo($"/locations/{context.LocationId}/edit"))" />
+            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
+                           OnClick="@(() => ConfirmDeleteAsync(context))" />
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No locations found.</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+    </PagerContent>
+</MudTable>
+
+@code {
+    private MudTable<LocationViewModel>? _table;
+    private bool _loading;
+    private string? _error;
+    private string? _searchText;
+    private CancellationTokenSource? _cts;
+
+    private async Task<TableData<LocationViewModel>> LoadLocationsAsync(TableState state, CancellationToken ct)
+    {
+        _cts?.Cancel();
+        _cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+
+        try
+        {
+            _loading = true;
+            _error = null;
+
+            var paging = new PagingRequest
+            {
+                Page = state.Page + 1,
+                PageSize = state.PageSize,
+                Search = _searchText,
+                SortBy = state.SortLabel,
+                SortDescending = state.SortDirection == SortDirection.Descending
+            };
+
+            var result = await LocationService.GetLocationsAsync(paging, _cts.Token);
+
+            if (result.IsSuccess && result.Data is not null)
+            {
+                return new TableData<LocationViewModel>
+                {
+                    Items = result.Data.Items,
+                    TotalItems = result.Data.TotalCount
+                };
+            }
+            else
+            {
+                _error = result.Error ?? "Failed to load locations";
+                return new TableData<LocationViewModel> { Items = [], TotalItems = 0 };
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return new TableData<LocationViewModel> { Items = [], TotalItems = 0 };
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading locations");
+            _error = "Failed to load locations";
+            return new TableData<LocationViewModel> { Items = [], TotalItems = 0 };
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnSearchChanged()
+    {
+        if (_table is not null)
+        {
+            await _table.ReloadServerData();
+        }
+    }
+
+    private async Task ConfirmDeleteAsync(LocationViewModel location)
+    {
+        var parameters = new DialogParameters<ConfirmDialog>
+        {
+            { x => x.ContentText, $"Are you sure you want to delete location '{location.LocationId}'?" },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error }
+        };
+
+        var dialog = await DialogService.ShowAsync<ConfirmDialog>("Delete Location", parameters);
+        var result = await dialog.Result;
+
+        if (result is not null && !result.Canceled)
+        {
+            var deleteResult = await LocationService.DeleteLocationAsync(location.LocationId);
+            if (deleteResult.IsSuccess)
+            {
+                Snackbar.Add("Location deleted successfully", Severity.Success);
+                await _table!.ReloadServerData();
+            }
+            else
+            {
+                Snackbar.Add(deleteResult.Error ?? "Failed to delete location", Severity.Error);
+            }
+        }
+    }
+
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
+}
