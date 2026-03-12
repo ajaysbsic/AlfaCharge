@@ -175,7 +175,13 @@
 
         if (result is not null && !result.Canceled && result.Data is string newPassword)
         {
-            var resetResult = await UserService.ResetPasswordAsync(Guid.Parse(user.Id), newPassword);
+            if (!TryGetUserId(user, out var userId))
+            {
+                Snackbar.Add("Cannot reset password: invalid user ID.", Severity.Error);
+                return;
+            }
+
+            var resetResult = await UserService.ResetPasswordAsync(userId, newPassword);
             if (resetResult.IsSuccess)
             {
                 Snackbar.Add("Password reset successfully", Severity.Success);
@@ -189,13 +195,22 @@
 
     private async Task ToggleLockAsync(UserViewModel user)
     {
+        if (!TryGetUserId(user, out var userId))
+        {
+            Snackbar.Add("Cannot update user: invalid user ID.", Severity.Error);
+            return;
+        }
+
         var newState = !user.IsLocked;
-        var result = await UserService.SetLockedAsync(Guid.Parse(user.Id), newState);
+        var result = await UserService.SetLockedAsync(userId, newState);
         
         if (result.IsSuccess)
         {
             Snackbar.Add($"User {(newState ? "locked" : "unlocked")} successfully", Severity.Success);
-            await _table!.ReloadServerData();
+            if (_table is not null)
+            {
+                await _table.ReloadServerData();
+            }
         }
         else
         {
@@ -217,11 +232,20 @@
 
         if (result is not null && !result.Canceled)
         {
-            var deleteResult = await UserService.DeleteUserAsync(Guid.Parse(user.Id));
+            if (!TryGetUserId(user, out var userId))
+            {
+                Snackbar.Add("Cannot delete user: invalid user ID.", Severity.Error);
+                return;
+            }
+
+            var deleteResult = await UserService.DeleteUserAsync(userId);
             if (deleteResult.IsSuccess)
             {
                 Snackbar.Add("User deleted successfully", Severity.Success);
-                await _table!.ReloadServerData();
+                if (_table is not null)
+                {
+                    await _table.ReloadServerData();
+                }
             }
             else
             {
@@ -236,6 +260,12 @@
         "cpo" => Color.Primary,
         _ => Color.Default
     };
+
+    private static bool TryGetUserId(UserViewModel user, out Guid userId)
+    {
+        userId = Guid.Empty;
+        return !string.IsNullOrWhiteSpace(user.Id) && Guid.TryParse(user.Id, out userId);
+    }
 
     public void Dispose()
     {

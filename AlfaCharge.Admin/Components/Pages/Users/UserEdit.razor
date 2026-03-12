@@ -21,6 +21,7 @@
     {
         <EditForm Model="_model" OnValidSubmit="SaveAsync">
             <DataAnnotationsValidator />
+            <ValidationSummary />
             <MudGrid>
                 <MudItem xs="12" md="6">
                     <MudTextField @bind-Value="_model.Name" 
@@ -184,6 +185,7 @@
                 else
                 {
                     _error = result.Error ?? "Failed to create user";
+                    Snackbar.Add(_error, Severity.Error);
                 }
             }
             else
@@ -205,6 +207,7 @@
                 else
                 {
                     _error = result.Error ?? "Failed to update user";
+                    Snackbar.Add(_error, Severity.Error);
                 }
             }
         }

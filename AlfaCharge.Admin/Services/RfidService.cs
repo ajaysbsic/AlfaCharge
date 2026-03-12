@@ -1,4 +1,5 @@
 using AlfaCharge.Admin.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace AlfaCharge.Admin.Services;
 
@@ -91,8 +92,11 @@ public sealed class RfidService
 /// </summary>
 public sealed class RfidCardEditModel
 {
+    [Required]
     public string IdTag { get; set; } = string.Empty;
     public Guid? UserId { get; set; }
+
+    [Required]
     public string Status { get; set; } = "Active";
     public DateTimeOffset? ExpiryDate { get; set; }
 }

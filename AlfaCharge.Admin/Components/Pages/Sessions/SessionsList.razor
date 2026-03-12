@@ -1,0 +1,268 @@
+@page "/sessions"
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+@inject StationService StationService
+@inject SessionsHubClient SessionsHubClient
+@inject AdminPreferencesService Preferences
+@inject ISnackbar Snackbar
+@inject ILogger<SessionsList> Logger
+
+<PageTitle>Live Sessions - AlfaCharge Admin</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Live Sessions</MudText>
+
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudTextField @bind-Value="_searchText"
+                          Label="Search charge point / idTag"
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.End"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          DebounceInterval="350"
+                          OnDebounceIntervalElapsed="RefreshUi" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ReloadStationsAsync" Class="mt-2" Disabled="_loading">
+                Reload
+            </MudButton>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudChip T="string" Color="@(_hubConnected ? Color.Success : Color.Warning)" Icon="@(_hubConnected ? Icons.Material.Filled.Wifi : Icons.Material.Filled.WifiOff)">
+                @(_hubConnected ? "Live updates connected" : "Live updates disconnected")
+            </MudChip>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+
+@if (!string.IsNullOrWhiteSpace(_error))
+{
+    <MudAlert Severity="Severity.Error" Class="mb-4" ShowCloseIcon="true" CloseIconClicked="() => _error = null">@_error</MudAlert>
+}
+
+<MudTable Items="FilteredSessions"
+          Dense="@Preferences.CompactTables"
+          Hover="true"
+          Bordered="true"
+          Striped="true"
+          Breakpoint="Breakpoint.Sm"
+          SortLabel="Sort by">
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortBy="new Func<LiveSessionViewModel, object>(x => x.ChargePointId)">Charge Point</MudTableSortLabel></MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh>Connector</MudTh>
+        <MudTh>Id Tag</MudTh>
+        <MudTh>Energy (kWh)</MudTh>
+        <MudTh>Started</MudTh>
+        <MudTh>Elapsed</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Charge Point">@context.ChargePointId</MudTd>
+        <MudTd DataLabel="Status">
+            <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">@context.Status</MudChip>
+        </MudTd>
+        <MudTd DataLabel="Connector">@(context.ConnectorId?.ToString() ?? "-")</MudTd>
+        <MudTd DataLabel="Id Tag">@(context.IdTag ?? "-")</MudTd>
+        <MudTd DataLabel="Energy">@context.EnergyKwh.ToString("0.###")</MudTd>
+        <MudTd DataLabel="Started">@context.StartTime.ToLocalTime().ToString("g")</MudTd>
+        <MudTd DataLabel="Elapsed">@FormatElapsed(context.Elapsed)</MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>No active sessions received yet. Keep this page open to receive live updates.</MudText>
+    </NoRecordsContent>
+</MudTable>
+
+@code {
+    private readonly Dictionary<string, LiveSessionViewModel> _sessionMap = new(StringComparer.OrdinalIgnoreCase);
+    private bool _loading;
+    private bool _hubConnected;
+    private string? _error;
+    private string? _searchText;
+    private CancellationTokenSource? _cts;
+
+    private List<LiveSessionViewModel> FilteredSessions
+        => _sessionMap.Values
+            .Where(s => string.IsNullOrWhiteSpace(_searchText)
+                        || s.ChargePointId.Contains(_searchText, StringComparison.OrdinalIgnoreCase)
+                        || (s.IdTag?.Contains(_searchText, StringComparison.OrdinalIgnoreCase) ?? false))
+            .OrderByDescending(s => s.StartTime)
+            .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _cts = new CancellationTokenSource();
+
+        SessionsHubClient.OnSessionUpdated += HandleSessionUpdated;
+        SessionsHubClient.OnStationStatusChanged += HandleStationStatusChanged;
+        SessionsHubClient.OnConnectionStateChanged += HandleConnectionStateChanged;
+
+        await ReloadStationsAsync();
+
+        try
+        {
+            await SessionsHubClient.StartAsync(_cts.Token);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "SignalR live session connection failed on initial load");
+        }
+
+        _ = RunRefreshLoopAsync(_cts.Token);
+    }
+
+    private async Task ReloadStationsAsync()
+    {
+        try
+        {
+            _loading = true;
+            _error = null;
+
+            var response = await StationService.GetStationsAsync(new PagingRequest
+            {
+                Page = 1,
+                PageSize = 200,
+                SortBy = "chargepointid"
+            });
+
+            if (!response.IsSuccess || response.Data is null)
+            {
+                _error = response.Error ?? "Failed to load stations for live monitor.";
+                return;
+            }
+
+            foreach (var station in response.Data.Items)
+            {
+                if (!_sessionMap.TryGetValue(station.ChargePointId, out var existing))
+                {
+                    _sessionMap[station.ChargePointId] = new LiveSessionViewModel
+                    {
+                        ChargePointId = station.ChargePointId,
+                        Status = station.Status ?? (station.IsConnected ? "Connected" : "Disconnected"),
+                        StartTime = station.LastHeartbeat ?? DateTimeOffset.UtcNow
+                    };
+                }
+                else
+                {
+                    existing.Status = station.Status ?? existing.Status;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error reloading station live data");
+            _error = "Failed to load live station data.";
+        }
+        finally
+        {
+            _loading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Task RefreshUi()
+    {
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private void HandleSessionUpdated(LiveSessionViewModel session)
+    {
+        if (string.IsNullOrWhiteSpace(session.ChargePointId))
+        {
+            return;
+        }
+
+        _sessionMap[session.ChargePointId] = session;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleStationStatusChanged(string chargePointId, string status)
+    {
+        if (string.IsNullOrWhiteSpace(chargePointId))
+        {
+            return;
+        }
+
+        if (_sessionMap.TryGetValue(chargePointId, out var existing))
+        {
+            existing.Status = status;
+        }
+        else
+        {
+            _sessionMap[chargePointId] = new LiveSessionViewModel
+            {
+                ChargePointId = chargePointId,
+                Status = status,
+                StartTime = DateTimeOffset.UtcNow
+            };
+        }
+
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleConnectionStateChanged(bool connected)
+    {
+        _hubConnected = connected;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RunRefreshLoopAsync(CancellationToken ct)
+    {
+        while (!ct.IsCancellationRequested)
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(Preferences.SessionsAutoRefreshSeconds), ct);
+                await InvokeAsync(StateHasChanged);
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+        }
+    }
+
+    private static string FormatElapsed(TimeSpan elapsed)
+    {
+        if (elapsed.TotalHours >= 1)
+        {
+            return $"{(int)elapsed.TotalHours}h {elapsed.Minutes}m";
+        }
+
+        return $"{Math.Max(0, elapsed.Minutes)}m";
+    }
+
+    private static Color GetStatusColor(string? status)
+    {
+        return status?.ToLowerInvariant() switch
+        {
+            "charging" => Color.Primary,
+            "available" => Color.Success,
+            "connected" => Color.Success,
+            "faulted" => Color.Error,
+            "disconnected" => Color.Warning,
+            _ => Color.Default
+        };
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_cts is not null)
+        {
+            _cts.Cancel();
+            _cts.Dispose();
+        }
+
+        SessionsHubClient.OnSessionUpdated -= HandleSessionUpdated;
+        SessionsHubClient.OnStationStatusChanged -= HandleStationStatusChanged;
+        SessionsHubClient.OnConnectionStateChanged -= HandleConnectionStateChanged;
+
+        await SessionsHubClient.StopAsync();
+    }
+}

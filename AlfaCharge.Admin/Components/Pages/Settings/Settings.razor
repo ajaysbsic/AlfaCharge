@@ -1,0 +1,199 @@
+@page "/settings"
+@rendermode InteractiveServer
+@inject IConfiguration Configuration
+@inject MetricsService MetricsService
+@inject SessionsHubClient SessionsHubClient
+@inject AdminPreferencesService Preferences
+@inject ISnackbar Snackbar
+@inject ILogger<Settings> Logger
+
+<PageTitle>Settings - AlfaCharge Admin</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Settings</MudText>
+
+<MudGrid>
+    <MudItem xs="12" md="7">
+        <MudPaper Class="pa-4 mb-4">
+            <MudText Typo="Typo.h6" Class="mb-2">Endpoints</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-4">
+                Endpoint values are read from configuration. Update appsettings to make them permanent.
+            </MudText>
+
+            <MudTextField Value="@_apiBaseUrl" Label="API Base URL" Variant="Variant.Outlined" ReadOnly="true" Class="mb-3" />
+            <MudTextField Value="@_signalRHubUrl" Label="SignalR Hub URL" Variant="Variant.Outlined" ReadOnly="true" Class="mb-3" />
+
+            <div class="d-flex gap-2 flex-wrap">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="TestApiConnectionAsync" Disabled="_testingApi">
+                    @if (_testingApi)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                    }
+                    Test API Connection
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="TestHubConnectionAsync" Disabled="_testingHub">
+                    @if (_testingHub)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mr-2" />
+                    }
+                    Test Hub Connection
+                </MudButton>
+            </div>
+        </MudPaper>
+
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-2">UI Preferences</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-4">
+                Preferences are applied immediately for your current session.
+            </MudText>
+
+            <MudNumericField T="int" @bind-Value="_sessionsAutoRefreshSeconds"
+                             Label="Live Sessions Auto Refresh (seconds)"
+                             Min="5" Max="120"
+                             Variant="Variant.Outlined"
+                             Class="mb-3" />
+
+            <MudSwitch @bind-Value="_compactTables"
+                       Label="Use compact table density"
+                       Color="Color.Primary"
+                       Class="mb-4" />
+
+            <div class="d-flex gap-2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SavePreferences">
+                    Save Preferences
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" OnClick="ResetPreferences">
+                    Reset
+                </MudButton>
+            </div>
+        </MudPaper>
+    </MudItem>
+
+    <MudItem xs="12" md="5">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-2">System Status</MudText>
+            <div class="d-flex flex-column gap-2">
+                <MudChip T="string" Color="@(_lastApiOk == true ? Color.Success : _lastApiOk == false ? Color.Error : Color.Default)" Size="Size.Small">
+                    API: @(_lastApiOk == true ? "Healthy" : _lastApiOk == false ? "Failed" : "Not tested")
+                </MudChip>
+                <MudChip T="string" Color="@(_lastHubOk == true ? Color.Success : _lastHubOk == false ? Color.Error : Color.Default)" Size="Size.Small">
+                    Hub: @(_lastHubOk == true ? "Reachable" : _lastHubOk == false ? "Failed" : "Not tested")
+                </MudChip>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_lastError))
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-2">@_lastError</MudAlert>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _apiBaseUrl = string.Empty;
+    private string _signalRHubUrl = string.Empty;
+    private bool _testingApi;
+    private bool _testingHub;
+    private bool? _lastApiOk;
+    private bool? _lastHubOk;
+    private string? _lastError;
+
+    private int _sessionsAutoRefreshSeconds;
+    private bool _compactTables;
+
+    protected override void OnInitialized()
+    {
+        _apiBaseUrl = Configuration["ApiBaseUrl"] ?? "http://localhost:5100";
+        _signalRHubUrl = Configuration["SignalRHubUrl"] ?? "http://localhost:5100/hub/ocpp";
+
+        _sessionsAutoRefreshSeconds = Preferences.SessionsAutoRefreshSeconds;
+        _compactTables = Preferences.CompactTables;
+    }
+
+    private async Task TestApiConnectionAsync()
+    {
+        _testingApi = true;
+        _lastError = null;
+
+        try
+        {
+            var result = await MetricsService.GetDashboardMetricsAsync();
+            _lastApiOk = result.IsSuccess;
+
+            if (result.IsSuccess)
+            {
+                Snackbar.Add("API connection test succeeded.", Severity.Success);
+            }
+            else
+            {
+                _lastError = result.Error ?? "API test failed.";
+                Snackbar.Add(_lastError, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "API connection test failed");
+            _lastApiOk = false;
+            _lastError = ex.Message;
+            Snackbar.Add("API connection test failed.", Severity.Error);
+        }
+        finally
+        {
+            _testingApi = false;
+        }
+    }
+
+    private async Task TestHubConnectionAsync()
+    {
+        _testingHub = true;
+        _lastError = null;
+
+        try
+        {
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+
+            if (!SessionsHubClient.IsConnected)
+            {
+                await SessionsHubClient.StartAsync(cts.Token);
+            }
+
+            _lastHubOk = SessionsHubClient.IsConnected;
+
+            if (_lastHubOk == true)
+            {
+                Snackbar.Add("Hub connection test succeeded.", Severity.Success);
+            }
+            else
+            {
+                _lastError = "SignalR hub did not reach connected state.";
+                Snackbar.Add(_lastError, Severity.Error);
+            }
+
+            await SessionsHubClient.StopAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Hub connection test failed");
+            _lastHubOk = false;
+            _lastError = ex.Message;
+            Snackbar.Add("Hub connection test failed.", Severity.Error);
+        }
+        finally
+        {
+            _testingHub = false;
+        }
+    }
+
+    private void SavePreferences()
+    {
+        Preferences.Update(_sessionsAutoRefreshSeconds, _compactTables);
+        Snackbar.Add("Preferences saved for this session.", Severity.Success);
+    }
+
+    private void ResetPreferences()
+    {
+        _sessionsAutoRefreshSeconds = 15;
+        _compactTables = false;
+        Preferences.Update(_sessionsAutoRefreshSeconds, _compactTables);
+        Snackbar.Add("Preferences reset.", Severity.Info);
+    }
+}

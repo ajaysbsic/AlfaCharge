@@ -1,4 +1,5 @@
 using AlfaCharge.Admin.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace AlfaCharge.Admin.Services;
 
@@ -115,9 +116,16 @@ public sealed class UserService
 /// </summary>
 public sealed class UserCreateModel
 {
+    [Required]
     public string Name { get; set; } = string.Empty;
+
+    [Required, EmailAddress]
     public string Email { get; set; } = string.Empty;
+
+    [Required, MinLength(8)]
     public string Password { get; set; } = string.Empty;
+
+    [Required]
     public string Role { get; set; } = "CPO";
     public string? AssignedLocationIds { get; set; }
 }
@@ -127,8 +135,13 @@ public sealed class UserCreateModel
 /// </summary>
 public sealed class UserUpdateModel
 {
+    [Required]
     public string Name { get; set; } = string.Empty;
+
+    [Required, EmailAddress]
     public string Email { get; set; } = string.Empty;
+
+    [Required]
     public string Role { get; set; } = "CPO";
     public string? AssignedLocationIds { get; set; }
 }

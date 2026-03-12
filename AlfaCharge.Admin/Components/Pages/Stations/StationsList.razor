@@ -242,7 +242,10 @@
             if (deleteResult.IsSuccess)
             {
                 Snackbar.Add("Station deleted successfully", Severity.Success);
-                await _table!.ReloadServerData();
+                if (_table is not null)
+                {
+                    await _table.ReloadServerData();
+                }
             }
             else
             {

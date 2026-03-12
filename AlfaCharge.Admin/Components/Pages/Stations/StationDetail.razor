@@ -75,8 +75,8 @@ else
         <!-- Connectors -->
         <MudItem xs="12" md="6">
             <MudPaper Class="pa-4">
-                <MudText Typo="Typo.h6" Class="mb-4">Connectors (@_station.Connectors.Count)</MudText>
-                @if (_station.Connectors.Count == 0)
+                <MudText Typo="Typo.h6" Class="mb-4">Connectors (@ConnectorItems.Count)</MudText>
+                @if (ConnectorItems.Count == 0)
                 {
                     <MudText Color="Color.Secondary">No connectors configured.</MudText>
                 }
@@ -93,7 +93,7 @@ else
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var conn in _station.Connectors)
+                            @foreach (var conn in ConnectorItems)
                             {
                                 <tr>
                                     <td>@conn.ConnectorNumber</td>
@@ -113,14 +113,14 @@ else
         <MudItem xs="12">
             <MudPaper Class="pa-4">
                 <MudText Typo="Typo.h6" Class="mb-4">Recent Activity</MudText>
-                @if (_station.RecentActivity.Count == 0)
+                @if (RecentActivityItems.Count == 0)
                 {
                     <MudText Color="Color.Secondary">No recent activity.</MudText>
                 }
                 else
                 {
                     <MudTimeline TimelinePosition="TimelinePosition.Start">
-                        @foreach (var activity in _station.RecentActivity.Take(10))
+                        @foreach (var activity in RecentActivityItems.Take(10))
                         {
                             <MudTimelineItem Color="Color.Primary" Size="Size.Small">
                                 <ItemContent>
@@ -144,6 +144,8 @@ else
     private bool _loading = true;
     private StationDetailViewModel? _station;
     private List<BreadcrumbItem> _breadcrumbs = [];
+    private List<ConnectorViewModel> ConnectorItems => _station?.Connectors ?? [];
+    private List<RecentActivityViewModel> RecentActivityItems => _station?.RecentActivity ?? [];
 
     protected override async Task OnInitializedAsync()
     {

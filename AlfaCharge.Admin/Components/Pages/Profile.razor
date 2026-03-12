@@ -1,0 +1,32 @@
+@page "/profile"
+@rendermode InteractiveServer
+@inject IConfiguration Configuration
+
+<PageTitle>Profile - AlfaCharge Admin</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">Profile</MudText>
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h6" Class="mb-3">Admin Session</MudText>
+
+    <MudSimpleTable Dense="true" Hover="true">
+        <tbody>
+            <tr>
+                <td><strong>Environment</strong></td>
+                <td>Development</td>
+            </tr>
+            <tr>
+                <td><strong>API Base URL</strong></td>
+                <td>@(Configuration["ApiBaseUrl"] ?? "http://localhost:5100")</td>
+            </tr>
+            <tr>
+                <td><strong>SignalR Hub URL</strong></td>
+                <td>@(Configuration["SignalRHubUrl"] ?? "http://localhost:5100/hub/ocpp")</td>
+            </tr>
+        </tbody>
+    </MudSimpleTable>
+
+    <MudAlert Severity="Severity.Info" Class="mt-4">
+        User authentication/profile management is not configured yet. This page confirms your current admin runtime context.
+    </MudAlert>
+</MudPaper>

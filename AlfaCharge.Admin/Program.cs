@@ -9,7 +9,10 @@ builder.Services.AddMudServices();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents(options =>
+    {
+        options.DetailedErrors = builder.Configuration.GetValue<bool>("DetailedErrors");
+    });
 
 // HTTP client for API calls
 builder.Services.AddHttpClient<ApiClient>(client =>
@@ -27,6 +30,7 @@ builder.Services.AddScoped<OcppAdminClient>();
 builder.Services.AddScoped<OcppLogClient>();
 builder.Services.AddScoped<MetricsService>();
 builder.Services.AddScoped<SessionsHubClient>();
+builder.Services.AddScoped<AdminPreferencesService>();
 
 var app = builder.Build();
 

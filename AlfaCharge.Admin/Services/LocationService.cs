@@ -1,4 +1,5 @@
 using AlfaCharge.Admin.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace AlfaCharge.Admin.Services;
 
@@ -101,11 +102,16 @@ public sealed class LocationService
 /// </summary>
 public sealed class LocationEditModel
 {
+    [Required]
     public string LocationId { get; set; } = string.Empty;
     public string? LocationName { get; set; }
     public string? City { get; set; }
     public string? Country { get; set; }
+
+    [Range(-90, 90)]
     public double? Latitude { get; set; }
+
+    [Range(-180, 180)]
     public double? Longitude { get; set; }
     public string? BusinessName { get; set; }
     public string? BusinessOwner { get; set; }

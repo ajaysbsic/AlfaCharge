@@ -1,4 +1,5 @@
 using AlfaCharge.Admin.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace AlfaCharge.Admin.Services;
 
@@ -104,11 +105,14 @@ public sealed class StationService
 /// </summary>
 public sealed class StationEditModel
 {
+    [Required]
     public string ChargePointId { get; set; } = string.Empty;
     public string? StationName { get; set; }
     public string? LocationId { get; set; }
     public string? Model { get; set; }
     public string? FirmwareVersion { get; set; }
     public string? SerialNumber { get; set; }
+
+    [Range(1, 10)]
     public int ConnectorCount { get; set; } = 1;
 }

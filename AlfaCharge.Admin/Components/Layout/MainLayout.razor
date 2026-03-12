@@ -1,9 +1,6 @@
 ﻿@inherits LayoutComponentBase
-
-<MudThemeProvider />
-<MudPopoverProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
 
 <MudLayout>
     <MudAppBar Elevation="1" Color="Color.Primary">
@@ -12,10 +9,10 @@
         <MudSpacer />
         <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Class="mr-4">@Environment</MudChip>
         <MudMenu Icon="@Icons.Material.Filled.Person" Color="Color.Inherit">
-            <MudMenuItem Icon="@Icons.Material.Filled.AccountCircle">Profile</MudMenuItem>
-            <MudMenuItem Icon="@Icons.Material.Filled.Settings">Settings</MudMenuItem>
+            <MudMenuItem Icon="@Icons.Material.Filled.AccountCircle" OnClick="OpenProfile">Profile</MudMenuItem>
+            <MudMenuItem Icon="@Icons.Material.Filled.Settings" OnClick="OpenSettings">Settings</MudMenuItem>
             <MudDivider />
-            <MudMenuItem Icon="@Icons.Material.Filled.Logout">Logout</MudMenuItem>
+            <MudMenuItem Icon="@Icons.Material.Filled.Logout" OnClick="Logout">Logout</MudMenuItem>
         </MudMenu>
     </MudAppBar>
 
@@ -46,5 +43,21 @@
     private void ToggleDrawer()
     {
         _drawerOpen = !_drawerOpen;
+    }
+
+    private void OpenProfile()
+    {
+        Navigation.NavigateTo("/profile");
+    }
+
+    private void OpenSettings()
+    {
+        Navigation.NavigateTo("/settings");
+    }
+
+    private void Logout()
+    {
+        // Placeholder until authentication is introduced.
+        Snackbar.Add("Logout is not configured yet.", Severity.Info);
     }
 }

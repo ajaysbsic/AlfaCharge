@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using AlfaCharge.Admin.Models;
 
@@ -173,8 +174,9 @@ public sealed class ApiClient
         }
 
         var errorContent = await response.Content.ReadAsStringAsync(ct);
-        _logger.LogWarning("API error {StatusCode}: {Error}", (int)response.StatusCode, errorContent);
-        return ApiResult<T>.Failure(errorContent, (int)response.StatusCode);
+        var parsedError = ParseErrorMessage(errorContent, response.ReasonPhrase);
+        _logger.LogWarning("API error {StatusCode}: {Error}", (int)response.StatusCode, parsedError);
+        return ApiResult<T>.Failure(parsedError, (int)response.StatusCode);
     }
 
     private async Task<ApiResult> HandleResponse(HttpResponseMessage response, CancellationToken ct)
@@ -185,7 +187,68 @@ public sealed class ApiClient
         }
 
         var errorContent = await response.Content.ReadAsStringAsync(ct);
-        _logger.LogWarning("API error {StatusCode}: {Error}", (int)response.StatusCode, errorContent);
-        return ApiResult.Failure(errorContent, (int)response.StatusCode);
+        var parsedError = ParseErrorMessage(errorContent, response.ReasonPhrase);
+        _logger.LogWarning("API error {StatusCode}: {Error}", (int)response.StatusCode, parsedError);
+        return ApiResult.Failure(parsedError, (int)response.StatusCode);
+    }
+
+    private static string ParseErrorMessage(string? errorContent, string? reasonPhrase)
+    {
+        if (string.IsNullOrWhiteSpace(errorContent))
+        {
+            return reasonPhrase ?? "Request failed";
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(errorContent);
+            var root = doc.RootElement;
+
+            if (root.ValueKind == JsonValueKind.Object)
+            {
+                // ASP.NET ProblemDetails / ValidationProblemDetails shape.
+                if (root.TryGetProperty("errors", out var errorsElement)
+                    && errorsElement.ValueKind == JsonValueKind.Object)
+                {
+                    var sb = new StringBuilder();
+                    foreach (var prop in errorsElement.EnumerateObject())
+                    {
+                        if (prop.Value.ValueKind != JsonValueKind.Array) continue;
+                        foreach (var item in prop.Value.EnumerateArray())
+                        {
+                            var message = item.GetString();
+                            if (string.IsNullOrWhiteSpace(message)) continue;
+                            if (sb.Length > 0) sb.Append(" ");
+                            sb.Append(message);
+                        }
+                    }
+
+                    if (sb.Length > 0)
+                    {
+                        return sb.ToString();
+                    }
+                }
+
+                if (root.TryGetProperty("detail", out var detail)
+                    && detail.ValueKind == JsonValueKind.String)
+                {
+                    var detailText = detail.GetString();
+                    if (!string.IsNullOrWhiteSpace(detailText)) return detailText!;
+                }
+
+                if (root.TryGetProperty("title", out var title)
+                    && title.ValueKind == JsonValueKind.String)
+                {
+                    var titleText = title.GetString();
+                    if (!string.IsNullOrWhiteSpace(titleText)) return titleText!;
+                }
+            }
+        }
+        catch
+        {
+            // Fall back to raw content.
+        }
+
+        return errorContent;
     }
 }

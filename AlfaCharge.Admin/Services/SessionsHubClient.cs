@@ -14,7 +14,7 @@ public sealed class SessionsHubClient : IAsyncDisposable
     private CancellationTokenSource? _reconnectCts;
 
     public event Action<LiveSessionViewModel>? OnSessionUpdated;
-    public event Action<string>? OnStationStatusChanged;
+    public event Action<string, string>? OnStationStatusChanged;
     public event Action<bool>? OnConnectionStateChanged;
 
     public bool IsConnected => _connection?.State == HubConnectionState.Connected;
@@ -51,7 +51,7 @@ public sealed class SessionsHubClient : IAsyncDisposable
         _connection.On<string, string>("StationStatusChanged", (chargePointId, status) =>
         {
             _logger.LogDebug("Station {ChargePointId} status changed to {Status}", chargePointId, status);
-            OnStationStatusChanged?.Invoke(chargePointId);
+            OnStationStatusChanged?.Invoke(chargePointId, status);
         });
 
         _reconnectCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -97,7 +97,23 @@ public sealed class SessionsHubClient : IAsyncDisposable
     /// </summary>
     public async Task StopAsync()
     {
-        _reconnectCts?.Cancel();
+        if (_reconnectCts is not null)
+        {
+            try
+            {
+                if (!_reconnectCts.IsCancellationRequested)
+                {
+                    _reconnectCts.Cancel();
+                }
+            }
+            catch (ObjectDisposedException)
+            {
+                // Stop can be called more than once during component disposal/navigation.
+            }
+
+            _reconnectCts.Dispose();
+            _reconnectCts = null;
+        }
 
         if (_connection is not null)
         {
@@ -167,7 +183,6 @@ public sealed class SessionsHubClient : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await StopAsync();
-        _reconnectCts?.Dispose();
     }
 
     private sealed class RetryPolicy : IRetryPolicy

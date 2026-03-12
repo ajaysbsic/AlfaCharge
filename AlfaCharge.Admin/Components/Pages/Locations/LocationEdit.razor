@@ -21,6 +21,7 @@
     {
         <EditForm Model="_model" OnValidSubmit="SaveAsync">
             <DataAnnotationsValidator />
+            <ValidationSummary />
             <MudGrid>
                 <MudItem xs="12" md="6">
                     <MudTextField @bind-Value="_model.LocationId" 
@@ -176,6 +177,7 @@
                 else
                 {
                     _error = result.Error ?? "Failed to create location";
+                    Snackbar.Add(_error, Severity.Error);
                 }
             }
             else
@@ -189,6 +191,7 @@
                 else
                 {
                     _error = result.Error ?? "Failed to update location";
+                    Snackbar.Add(_error, Severity.Error);
                 }
             }
         }

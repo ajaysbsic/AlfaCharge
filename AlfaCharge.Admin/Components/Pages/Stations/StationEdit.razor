@@ -22,6 +22,7 @@
     {
         <EditForm Model="_model" OnValidSubmit="SaveAsync">
             <DataAnnotationsValidator />
+            <ValidationSummary />
             <MudGrid>
                 <MudItem xs="12" md="6">
                     <MudTextField @bind-Value="_model.ChargePointId" 
@@ -128,10 +129,22 @@
 
     private async Task LoadLocationsAsync()
     {
-        var result = await LocationService.GetAllLocationsAsync();
-        if (result.IsSuccess && result.Data is not null)
+        try
         {
-            _locations = result.Data;
+            var result = await LocationService.GetAllLocationsAsync();
+            if (result.IsSuccess && result.Data is not null)
+            {
+                _locations = result.Data;
+            }
+            else
+            {
+                Snackbar.Add(result.Error ?? "Failed to load locations", Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading locations for station form");
+            Snackbar.Add("Failed to load locations", Severity.Warning);
         }
     }
 
@@ -189,6 +202,7 @@
                 else
                 {
                     _error = result.Error ?? "Failed to create station";
+                    Snackbar.Add(_error, Severity.Error);
                 }
             }
             else
@@ -202,6 +216,7 @@
                 else
                 {
                     _error = result.Error ?? "Failed to update station";
+                    Snackbar.Add(_error, Severity.Error);
                 }
             }
         }
